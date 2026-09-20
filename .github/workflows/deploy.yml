@@ -39,6 +39,13 @@ jobs:
       - name: 运行自检
         run: node scripts/test.mjs
 
+      # 第一次部署最常见的失败原因：仓库还没开启 Pages。
+      # 这里提前检查一次并给出中文操作指引，比 configure-pages 的英文报错友好得多。
+      - name: 检查 GitHub Pages 是否已开启
+        run: node scripts/check-pages.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: 配置 Pages
         uses: actions/configure-pages@v5
 

@@ -12,7 +12,8 @@
     "new": "node scripts/new-app.mjs",
     "hash": "node scripts/hash.mjs",
     "icons": "node scripts/make-icons.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "check-pages": "node scripts/check-pages.mjs"
   },
   "engines": {
     "node": ">=18"

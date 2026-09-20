@@ -1,8 +1,8 @@
 /* 由 scripts/build.mjs 自动生成，请勿手动修改。
    数据来源：data/site.json + data/categories.json + data/apps.json
-   生成时间：2026-09-19T12:11:50.869Z */
+   生成时间：2026-09-20T07:46:22.503Z */
 window.SITE_DATA = {
-  "generatedAt": "2026-09-19T12:11:50.869Z",
+  "generatedAt": "2026-09-20T07:46:22.503Z",
   "site": {
     "name": "DevShelf",
     "nameCn": "开发者资源站",
@@ -18,10 +18,10 @@ window.SITE_DATA = {
       "Linux",
       "macOS"
     ],
-    "url": "https://example.github.io/resource-site",
+    "url": "https://2681114373zxd-prog.github.io/resource-site",
     "author": "Your Name",
     "email": "",
-    "github": "https://github.com/yourname/resource-site",
+    "github": "https://github.com/2681114373zxd-prog/resource-site",
     "contact": {
       "email": "",
       "telegram": "",

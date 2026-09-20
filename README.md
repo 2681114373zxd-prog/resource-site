@@ -131,6 +131,18 @@ git remote add origin https://github.com/你的用户名/你的仓库名.git
 git push -u origin main
 ```
 
+> **推送失败（`Connection was reset` / 连接超时）？**
+> 这是国内网络的常见情况：浏览器能打开 GitHub，是因为系统代理生效了，但 **git 默认不走系统代理**。
+> 让 git 也走你的本地代理即可（端口填你自己的，v2rayN / Clash 常见端口是 `10808`、`10809`、`7890`）：
+>
+> ```bash
+> git config --global http.https://github.com/.proxy http://127.0.0.1:10808
+> ```
+>
+> 这条配置只对 GitHub 生效，不影响其他网站；想取消执行
+> `git config --global --unset http.https://github.com/.proxy`。
+> 第一次 `push` 会弹出登录窗口，用浏览器授权登录你的 GitHub 账号，之后 Windows 会记住凭据。
+
 ### 第 2 步：改 `data/site.json` 里的网址
 
 把 `url` 改成你的真实地址，例如 `https://你的用户名.github.io/你的仓库名`。
@@ -368,6 +380,12 @@ git add . && git commit -m "add mytool" && git push
 
 **Q：推送到 GitHub 后页面没更新？**
 A：GitHub Pages 有缓存（一般 1～10 分钟）；另外确认 Actions 跑成功了，或者（方式 B）你本地确实执行过 `npm run build`。也可以在页脚查看构建日期。
+
+**Q：Actions 报 `Get Pages site failed ... Error: Not Found`（部署任务失败）？**
+A：这说明仓库**还没有开启 Pages**（或 Source 不是「GitHub Actions」），不是代码问题。每个人第一次部署只会遇到一次：
+① 打开仓库 → **Settings** → **Pages**；② **Build and deployment** → **Source** 选 **GitHub Actions**；
+③ 回到 **Actions** 页面点 **Re-run all jobs** 重跑。
+`scripts/check-pages.mjs` 会在部署前先检查一遍，并把上面这段话直接打印在日志里。
 
 **Q：详情页 404？**
 A：三种可能：① 忘了 `npm run build`；② `id` 改了但旧的链接还在（`apps/<旧id>/` 目录可以手动删）；③ 链接大小写不一致（`id` 建议全小写）。
