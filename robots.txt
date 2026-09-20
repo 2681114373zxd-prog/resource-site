@@ -1,0 +1,7 @@
+# DevShelf
+User-agent: *
+Allow: /
+
+# 说明：不要屏蔽 /js/ 与 /data/ —— 搜索引擎需要用它们渲染页面（本站是纯静态站，没有后台接口）
+
+Sitemap: https://example.github.io/resource-site/sitemap.xml

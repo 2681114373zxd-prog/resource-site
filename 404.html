@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('resource-site-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <title>页面不存在 · 404</title>
+  <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main id="main" class="container" style="padding:60px 16px;text-align:center">
+    <h1 style="font-size:clamp(2rem,10vw,3.4rem);margin-bottom:8px">404</h1>
+    <p class="muted" style="margin-bottom:24px">这个页面不存在，可能已经被删除、重命名，或者链接写错了。</p>
+
+    <div class="panel" style="max-width:520px;margin:0 auto;padding:18px;text-align:left">
+      <p style="margin:0 0 12px" id="hint">你可以试试：</p>
+      <ul style="margin:0 0 18px;padding-left:1.2em;color:var(--text-soft)">
+        <li>回到<a href="index.html">首页</a>，用搜索框找找看</li>
+        <li>检查链接里的软件 id 是否拼错</li>
+        <li>软件可能已经改名，可以在首页的分类里查找</li>
+      </ul>
+      <a class="btn btn-primary btn-block" href="index.html">返回首页</a>
+    </div>
+  </main>
+
+  <script>
+    // 如果访问的是 /apps/<id>/ 但那个页面还没生成（例如忘了跑 npm run build），
+    // 就自动跳到通用详情页，尽量不让访客看到 404。
+    (function () {
+      var match = location.pathname.match(/\/apps\/([^/]+)\/(index\.html)?$/);
+      if (!match) return;
+      var prefix = location.pathname.replace(/\/apps\/.*$/, '/');
+      var target = prefix + 'apps/app.html?id=' + encodeURIComponent(decodeURIComponent(match[1]));
+      document.getElementById('hint').innerHTML =
+        '即将跳转到 <a href="' + target + '">' + target + '</a> …如果 3 秒后没有跳转，请点这个链接。';
+      setTimeout(function () {
+        location.replace(target);
+      }, 1200);
+    })();
+  </script>
+</body>
+</html>

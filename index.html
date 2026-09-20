@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#080b12" media="(prefers-color-scheme: dark)">
+
+  <!-- 首屏主题，避免刷新时闪白 -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('resource-site-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      // 标记「JS 可用」：CSS 里用 html.js 来决定要不要显示搜索、筛选、主题切换
+      // 这些必须靠脚本才能工作的组件。浏览器禁用 JavaScript 时本脚本不会执行，
+      // 页面自动退回「只展示预渲染内容」的无 JS 模式，不会出现点不动的按钮。
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+
+  <!-- SEO:START（npm run build 会根据 data/site.json 自动更新这一段） -->
+  <title>DevShelf · 我自己制作与整理的软件、安装包与资源合集</title>
+  <meta name="description" content="DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。">
+  <meta name="keywords" content="软件下载, 安装包, 资源站, 开源软件, Windows, Android, Linux, macOS">
+  <meta name="author" content="Your Name">
+  <link rel="canonical" href="https://example.github.io/resource-site/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DevShelf">
+  <meta property="og:title" content="DevShelf · 我自己制作与整理的软件、安装包与资源合集">
+  <meta property="og:description" content="DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。">
+  <meta property="og:url" content="https://example.github.io/resource-site/">
+  <meta property="og:image" content="https://example.github.io/resource-site/assets/images/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- SEO:END -->
+
+  <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
+
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="alternate" type="application/rss+xml" title="更新订阅" href="feed.xml">
+  <link rel="sitemap" type="application/xml" href="sitemap.xml">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <!-- ====================== 顶部导航 ====================== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <img class="brand-mark" src="assets/images/logo.svg" data-site="logo" alt="" width="32" height="32">
+        <span class="brand-text">
+          <span class="brand-name" data-site="name">DevShelf</span>
+          <span class="brand-sub" data-site="tagline">个人软件与资源下载站</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="主导航">
+        <a href="index.html" aria-current="page">首页</a>
+        <a href="#apps">全部软件</a>
+        <a href="feed.xml">更新订阅</a>
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="icon-btn header-github" href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库" title="GitHub 仓库">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+        </a>
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深色模式" title="切换深色模式"></button>
+        <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu-panel" aria-label="打开菜单">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 手机端菜单 -->
+    <div class="container">
+      <nav class="menu-panel" id="menu-panel" data-menu-panel data-open="false" aria-label="移动端导航">
+        <a href="index.html">首页</a>
+        <a href="#apps">全部软件</a>
+        <a href="feed.xml">更新订阅</a>
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- ====================== Hero ====================== -->
+    <section class="hero container">
+      <img class="hero-mark" src="assets/images/logo.svg" alt="" width="62" height="62">
+      <h1 data-site="name">DevShelf</h1>
+      <p class="hero-lead" data-site="tagline">我自己制作与整理的软件、安装包与资源合集</p>
+      <div class="hero-stats">
+        <!-- STATS:START（npm run build 自动生成，方便没有 JS 时也能看到统计） -->
+<span><b data-stat="apps">6</b> 个软件</span>
+        <span><b data-stat="packages">24</b> 个安装包</span>
+        <span>最近更新 <b data-stat="updated" data-stat-updated-date title="最近更新：2025-01-18">2025年1月18日</b></span>
+        <!-- STATS:END -->
+      </div>
+
+      <div class="search-box" data-filled="false">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+        <label class="visually-hidden" for="search">搜索软件</label>
+        <input class="search-input" id="search" type="search" data-search-input autocomplete="off"
+               placeholder="搜索软件名称、分类或关键词，例如：压缩 / v2ray / OCR" enterkeyhint="search">
+        <span class="search-hint">
+          <button class="search-clear" type="button" data-search-clear aria-label="清空搜索">✕</button>
+          <kbd>/</kbd>
+        </span>
+      </div>
+    </section>
+
+    <!-- ====================== 分类 / 排序工具栏 ====================== -->
+    <div class="toolbar" id="apps">
+      <div class="container toolbar-inner">
+        <div class="chips" data-category-chips role="group" aria-label="按分类筛选"></div>
+        <div class="toolbar-right">
+          <label class="visually-hidden" for="sort">排序方式</label>
+          <select class="select" id="sort" data-sort>
+            <option value="default">推荐排序</option>
+            <option value="updated">最近更新</option>
+            <option value="name">按名称</option>
+            <option value="version">按版本号</option>
+          </select>
+          <button class="icon-btn view-toggle" type="button" data-view-btn="grid" aria-pressed="true" aria-label="网格视图" title="网格视图">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg>
+          </button>
+          <button class="icon-btn view-toggle" type="button" data-view-btn="list" aria-pressed="false" aria-label="列表视图" title="列表视图">
+            <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================== 软件列表 ====================== -->
+    <section class="container">
+      <div class="result-bar" data-result-bar><!-- RESULT:START -->
+<span>共 <b>6</b> 个软件 · <b>24</b> 个安装包</span><span class="muted">选择分类或搜索可以快速筛选</span>
+<!-- RESULT:END --></div>
+
+      <div class="app-grid" data-app-grid data-view="grid"><!-- APPS:START（npm run build 自动生成，没有 JS 也能看到列表） -->
+      <article class="app-card reveal" data-id="obs-studio" data-category="其他">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(258 68% 56%),hsl(300 70% 58%))" aria-hidden="true">OS</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/obs-studio/index.html">OBS Studio</a>
+              <span class="fav-star" title="推荐"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 4 2.4 5.1 5.6.8-4 3.9.9 5.6-4.9-2.7-4.9 2.7.9-5.6-4-3.9 5.6-.8L12 4Z"/></svg></span>
+            </h3>
+            <p class="card-tagline">开源免费的录屏与直播推流软件</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v31.0.1</span>
+          <span class="badge">约 140 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Windows · macOS +1</span>
+          <span class="badge" title="更新时间：2025-01-15"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2025年1月15日</span>
+          <span class="tag">其他</span>
+          <span class="tag">录屏</span><span class="tag">直播</span><span class="tag">推流</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/obs-studio/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-Windows-Installer.exe" title="下载：Windows x64 安装版" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/obsproject/obs-studio" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+      <article class="app-card reveal" data-id="localsend" data-category="工具">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(70 68% 56%),hsl(112 70% 58%))" aria-hidden="true">LO</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/localsend/index.html">LocalSend</a>
+              <span class="fav-star" title="推荐"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 4 2.4 5.1 5.6.8-4 3.9.9 5.6-4.9-2.7-4.9 2.7.9-5.6-4-3.9 5.6-.8L12 4Z"/></svg></span>
+            </h3>
+            <p class="card-tagline">跨平台局域网文件互传工具，无需数据线</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v1.16.1</span>
+          <span class="badge">约 30 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Windows · macOS +2</span>
+          <span class="badge" title="更新时间：2024-12-07"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2024年12月7日</span>
+          <span class="tag">工具</span>
+          <span class="tag">文件传输</span><span class="tag">跨平台</span><span class="tag">局域网</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/localsend/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-windows-x86-64.exe" title="下载：Windows x64" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/localsend/localsend" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+      <article class="app-card reveal" data-id="7zip" data-category="工具">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(123 68% 56%),hsl(165 70% 58%))" aria-hidden="true">7Z</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/7zip/index.html">7-Zip</a>
+              <span class="fav-star" title="推荐"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m12 4 2.4 5.1 5.6.8-4 3.9.9 5.6-4.9-2.7-4.9 2.7.9-5.6-4-3.9 5.6-.8L12 4Z"/></svg></span>
+            </h3>
+            <p class="card-tagline">免费开源的高压缩率压缩 / 解压工具</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v24.09</span>
+          <span class="badge">1.6 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Windows · Linux</span>
+          <span class="badge" title="更新时间：2024-11-29"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2024年11月29日</span>
+          <span class="tag">工具</span>
+          <span class="tag">压缩</span><span class="tag">解压</span><span class="tag">开源</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/7zip/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/ip7z/7zip/releases/download/24.09/7z2409-x64.exe" title="下载：Windows x64 安装版" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/ip7z/7zip" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+      <article class="app-card reveal" data-id="notepad-plus-plus" data-category="Windows">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(224 68% 56%),hsl(266 70% 58%))" aria-hidden="true">NO</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/notepad-plus-plus/index.html">Notepad++</a>
+              
+            </h3>
+            <p class="card-tagline">轻量好用的 Windows 代码与文本编辑器</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v8.7.1</span>
+          <span class="badge">5.2 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Windows</span>
+          <span class="badge" title="更新时间：2025-01-18"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2025年1月18日</span>
+          <span class="tag">Windows</span>
+          <span class="tag">编辑器</span><span class="tag">文本</span><span class="tag">代码</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/notepad-plus-plus/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.Installer.x64.exe" title="下载：Windows x64 安装版" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/notepad-plus-plus/notepad-plus-plus" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+      <article class="app-card reveal" data-id="termux" data-category="Android">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(294 68% 56%),hsl(336 70% 58%))" aria-hidden="true">TE</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/termux/index.html">Termux</a>
+              
+            </h3>
+            <p class="card-tagline">Android 上的 Linux 终端模拟器</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v0.118.1</span>
+          <span class="badge">约 110 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Android</span>
+          <span class="badge" title="更新时间：2025-01-01"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2025年1月1日</span>
+          <span class="tag">Android</span>
+          <span class="tag">终端</span><span class="tag">Linux</span><span class="tag">命令行</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/termux/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/termux/termux-app/releases/download/v0.118.1/termux-app_v0.118.1+github-debug_arm64-v8a.apk" title="下载：Android ARM64 APK" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/termux/termux-app" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+      <article class="app-card reveal" data-id="umi-ocr" data-category="工具">
+        <div class="card-head">
+          <span class="app-icon app-icon-mono" style="background:linear-gradient(135deg,hsl(25 68% 56%),hsl(67 70% 58%))" aria-hidden="true">UO</span>
+          <div class="card-title">
+            <h3>
+              <a href="apps/umi-ocr/index.html">Umi-OCR</a>
+              
+            </h3>
+            <p class="card-tagline">免费开源的离线批量 OCR 文字识别工具</p>
+          </div>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-accent">v2.1.4</span>
+          <span class="badge">约 180 MB</span>
+          <span class="badge"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg> Windows</span>
+          <span class="badge" title="更新时间：2024-10-26"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg> 2024年10月26日</span>
+          <span class="tag">工具</span>
+          <span class="tag">OCR</span><span class="tag">文字识别</span><span class="tag">离线</span>
+        </div>
+        <div class="card-foot">
+          <a class="btn btn-soft" href="apps/umi-ocr/index.html">详情</a>
+          <a class="btn btn-primary" href="https://github.com/hiroi-sora/Umi-OCR/releases/download/v2.1.4/Umi-OCR_Rapid_v2.1.4.7z" title="下载：Windows x64 完整版（7z 压缩包）" target="_blank" rel="noopener noreferrer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg> 下载</a>
+          <a class="btn btn-soft btn-icon" href="https://github.com/hiroi-sora/Umi-OCR" target="_blank" rel="noopener noreferrer" title="项目源码 / GitHub" aria-label="项目源码"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg></a>
+          
+        </div>
+      </article>
+<!-- APPS:END --></div>
+
+      <div class="empty-state" data-empty-state data-visible="false">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/><path d="M8 11h6"/></svg>
+        <h3>没有找到符合条件的软件</h3>
+        <p>试试其它关键词，或者清空筛选条件看看全部资源。</p>
+        <button class="btn btn-soft" type="button" data-reset-filters>清空筛选条件</button>
+      </div>
+    </section>
+
+    <!-- ====================== 关于本站（同时也是 SEO 文案） ====================== -->
+    <section class="container" id="about">
+      <div class="section-head">
+        <h2>关于本站</h2>
+        <span class="muted">持续更新中</span>
+      </div>
+      <div class="detail-card">
+        <div class="prose">
+          <p data-site="description">DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包。</p>
+          <ul>
+            <li>所有软件都可以在详情页看到 <strong>版本号</strong>、<strong>文件大小</strong>、<strong>更新时间</strong>、<strong>系统要求</strong> 和 <strong>更新日志</strong>。</li>
+            <li>需要多个平台的软件（Windows / macOS / Linux / Android）会分别列出对应的安装包。</li>
+            <li>想第一时间知道更新？可以订阅本站的 <a href="feed.xml">更新日志（RSS）</a>。</li>
+          </ul>
+          <blockquote><p data-site="note">本站仅收录个人整理与开源软件资源，所有文件版权归原作者所有。</p></blockquote>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ====================== 页脚 ====================== -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img class="brand-mark" src="assets/images/logo.svg" data-site="logo" alt="" width="26" height="26">
+        <span data-site="name">DevShelf</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub 项目地址</a>
+        <a href="mailto:you@example.com" data-site="email">联系邮箱</a>
+        <a href="feed.xml">更新订阅（RSS）</a>
+        <a href="sitemap.xml">站点地图</a>
+        <a href="#about">关于本站</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span data-site="year">2026</span> <span data-site="name">DevShelf</span> · 保留所有权利</span>
+      <span>纯静态站点 · 构建于 <span data-build-date></span></span>
+    </div>
+  </footer>
+
+  <button class="to-top" type="button" data-to-top data-visible="false" aria-label="回到顶部">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+  </button>
+
+  <noscript>
+    <div class="container" style="padding-bottom:40px">
+      <div class="alert">本站的搜索、筛选和深色模式需要启用 JavaScript。下面是构建时就已经生成好的完整软件列表，仍然可以正常浏览和下载。</div>
+    </div>
+  </noscript>
+
+  <!-- 构建时生成的数据（data/site.json + data/categories.json + data/apps.json 的合集） -->
+  <script src="data/apps.generated.js"></script>
+  <!-- 首页脚本。js/home.js 是 scripts/bundle.mjs 把 js/ 下的 ES 模块打包成的普通脚本，
+       这样即使直接双击打开（file://）也能运行，改完源码记得 npm run build。 -->
+  <script defer src="js/home.js"></script>
+</body>
+</html>

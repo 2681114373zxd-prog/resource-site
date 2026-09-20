@@ -1,0 +1,26 @@
+# 依赖（本项目零依赖，保留以防以后手动安装工具）
+node_modules/
+
+# 本地预览缓存
+.cache/
+.shots/
+_measure.html
+_probe.html
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+
+# 部署输出目录（每次 npm run build 都会重新生成，不需要提交）
+dist/
+
+# 构建产物说明：
+# apps/<id>/index.html、apps/app.html、sitemap.xml、robots.txt、feed.xml、
+# data/apps.generated.js、js/home.js、js/app.js 都是 scripts/build.mjs 自动生成的。
+# 其中 js/home.js / js/app.js 是把 js/ 里的 ES 模块打包成的普通脚本，
+# 用来支持「直接双击 index.html」（file://）打开，务必一起提交。
+# 建议一起提交：这样直接用 GitHub Pages 的「分支部署」也能生效，
+# 而且别人 clone 下来不跑构建就能看到完整页面。
+# 如果你只用 Actions / Cloudflare 自动构建，也可以忽略它们（体积很小，一般不必要）。

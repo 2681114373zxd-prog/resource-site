@@ -1,0 +1,127 @@
+<!doctype html>
+<!-- 由 scripts/build.mjs 自动生成（apps/app.html · 通用详情页，2026-09-19T12:11:50.948Z）。请修改 data/apps.json 后重新运行 npm run build。 -->
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#080b12" media="(prefers-color-scheme: dark)">
+
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('resource-site-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      // 标记「JS 可用」：CSS 里用 html.js 决定要不要显示需要脚本的交互组件。
+      // 禁用 JavaScript 时这段脚本不会执行，页面自动退回「只展示预渲染内容」的模式。
+      document.documentElement.classList.add('js');
+    })();
+  </script>
+
+  <title>软件详情 · DevShelf</title>
+  <meta name="description" content="DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。">
+  <meta name="robots" content="noindex">
+  <meta name="app-id" content="">
+  <meta name="author" content="Your Name">
+  <link rel="canonical" href="https://example.github.io/resource-site/apps/app.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="DevShelf">
+  <meta property="og:title" content="软件详情 · DevShelf">
+  <meta property="og:description" content="DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。">
+  <meta property="og:url" content="https://example.github.io/resource-site/apps/app.html">
+  <meta property="og:image" content="https://example.github.io/resource-site/assets/images/og-cover.png">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="../assets/favicon/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../assets/favicon/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/favicon/apple-touch-icon.png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="alternate" type="application/rss+xml" title="更新订阅" href="../feed.xml">
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "软件详情"
+}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="../index.html">
+        <img class="brand-mark" src="../assets/images/logo.svg" data-site="logo" alt="" width="32" height="32">
+        <span class="brand-text">
+          <span class="brand-name" data-site="name">DevShelf</span>
+          <span class="brand-sub" data-site="tagline">我自己制作与整理的软件、安装包与资源合集</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label="主导航">
+        <a href="../index.html">首页</a>
+        <a href="../index.html#apps">全部软件</a>
+        <a href="../feed.xml">更新订阅</a>
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="icon-btn header-github" href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer" aria-label="GitHub 仓库" title="GitHub 仓库">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.09.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.59.69.49A10.03 10.03 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"/></svg>
+        </a>
+        <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深色模式" title="切换深色模式"></button>
+        <button class="icon-btn menu-btn" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu-panel" aria-label="打开菜单">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+      <nav class="menu-panel" id="menu-panel" data-menu-panel data-open="false" aria-label="移动端导航">
+        <a href="../index.html">首页</a>
+        <a href="../index.html#apps">全部软件</a>
+        <a href="../feed.xml">更新订阅</a>
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub 仓库</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="container" data-app-root data-app-id="" data-prerendered="false">
+<div class="alert" style="margin:24px 0">正在加载软件信息…如果你的浏览器禁用了 JavaScript，请从<a href="../index.html">首页</a>进入对应的软件页面。</div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img class="brand-mark" src="../assets/images/logo.svg" data-site="logo" alt="" width="26" height="26">
+        <span data-site="name">DevShelf</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/yourname/resource-site" data-site="github" target="_blank" rel="noopener noreferrer">GitHub 项目地址</a>
+        <a href="#" data-site="email">联系邮箱</a>
+        <a href="../feed.xml">更新订阅（RSS）</a>
+        <a href="../sitemap.xml">站点地图</a>
+        <a href="../index.html">返回首页</a>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© 2026 <span data-site="name">DevShelf</span> · 保留所有权利</span>
+      <span data-site="note">本站仅收录个人整理与开源软件资源，所有文件版权归原作者所有。</span>
+      <span>构建于 <span data-build-date>2026-09-19</span></span>
+    </div>
+  </footer>
+
+  <button class="to-top" type="button" data-to-top data-visible="false" aria-label="回到顶部">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+  </button>
+
+  <script src="../data/apps.generated.js"></script>
+  <!-- js/app.js 是 scripts/bundle.mjs 自动打包出来的普通脚本（file:// 下也能运行） -->
+  <script defer src="../js/app.js"></script>
+</body>
+</html>

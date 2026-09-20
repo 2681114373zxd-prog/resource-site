@@ -1,0 +1,20 @@
+{
+  "name": "resource-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "个人软件 / 资源下载站：纯静态（HTML + CSS + JS），零依赖，可用 GitHub Pages / Cloudflare Pages 部署。",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/test.mjs",
+    "dev": "node scripts/dev.mjs",
+    "serve": "node scripts/serve.mjs",
+    "new": "node scripts/new-app.mjs",
+    "hash": "node scripts/hash.mjs",
+    "icons": "node scripts/make-icons.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

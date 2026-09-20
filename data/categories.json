@@ -1,0 +1,14 @@
+{
+  "all": {
+    "slug": "all",
+    "name": "全部"
+  },
+  "items": [
+    { "slug": "windows", "name": "Windows" },
+    { "slug": "android", "name": "Android" },
+    { "slug": "linux", "name": "Linux" },
+    { "slug": "macos", "name": "macOS" },
+    { "slug": "tools", "name": "工具" },
+    { "slug": "other", "name": "其他" }
+  ]
+}
