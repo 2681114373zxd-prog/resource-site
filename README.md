@@ -174,6 +174,20 @@ git push -u origin main
    - Build output directory：`dist`
 3. 保存并部署，之后每次 push 都会自动构建
 
+> **本项目当前的实际状态**：站点已经用「直传（Direct Upload）」方式部署在 Cloudflare Pages 上，
+> 项目名 `resource-site`，自定义域名 <https://2681114373.ccwu.cc>。
+>
+> 直传方式**不会**跟着 push 自动部署，改完数据后在本机执行：
+>
+> ```bash
+> npm run build
+> npx wrangler pages deploy dist --project-name=resource-site --branch=main
+> ```
+>
+> （wrangler 需要授权：`npx wrangler login`，或设置环境变量
+> `CLOUDFLARE_API_TOKEN` 与 `CLOUDFLARE_ACCOUNT_ID`。）
+> 如果想让每次 push 都自动部署，就按上面的「连接 GitHub 仓库」方式再建一个项目。
+
 ### 关于子目录
 
 本站所有链接都是相对路径，所以部署在 `https://域名/子目录/`（GitHub Pages 项目站点就是这种）不会白屏或丢样式。唯一要手动改的是 `data/site.json` 里的 `url`。

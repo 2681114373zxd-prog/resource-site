@@ -1,8 +1,8 @@
 /* 由 scripts/build.mjs 自动生成，请勿手动修改。
    数据来源：data/site.json + data/categories.json + data/apps.json
-   生成时间：2026-09-20T09:23:29.425Z */
+   生成时间：2026-09-20T09:26:38.539Z */
 window.SITE_DATA = {
-  "generatedAt": "2026-09-20T09:23:29.425Z",
+  "generatedAt": "2026-09-20T09:26:38.539Z",
   "site": {
     "name": "DevShelf",
     "nameCn": "开发者资源站",
