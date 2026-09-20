@@ -9,6 +9,9 @@ _probe.html
 .DS_Store
 Thumbs.db
 
+# Wrangler（Cloudflare 部署用）的本地缓存，不需要提交
+.wrangler/
+
 # 编辑器
 .vscode/
 .idea/
