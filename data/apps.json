@@ -1,85 +1,146 @@
 {
-  "apps": [
+  "应用程序": [
     {
-      "id": "7zip",
-      "name": "7-Zip",
-      "tagline": "免费开源的高压缩率压缩 / 解压工具",
-      "description": "7-Zip 是一款完全免费、开源的压缩与解压工具，支持 7z、zip、rar、tar、gz 等几乎所有常见格式。\n\n特点：\n\n- 7z 格式压缩率高于 zip，适合长期归档\n- 自带右键菜单，操作简单\n- 无广告、无捆绑、完全免费\n\n> 提示：本站提供官方 GitHub Release 的直链，你也可以在软件详情页选择适合自己系统的架构（x64 / ARM64 / 32 位）。",
-      "icon": "",
-      "category": "工具",
-      "platforms": ["Windows", "Linux"],
-      "tags": ["压缩", "解压", "开源", "免费", "绿色"],
-      "version": "24.09",
-      "releaseDate": "2024-11-29",
-      "updated": "2024-11-29",
-      "size": "1.6 MB",
-      "license": "LGPL-2.1（部分 BSD）",
-      "homepage": "https://www.7-zip.org/",
-      "repo": "https://github.com/ip7z/7zip",
-      "requirements": ["Windows 7 / 8 / 10 / 11（32 位、x64、ARM64）", "Linux x64 / ARM64（命令行版本）"],
-      "featured": true,
-      "downloads": [
-        { "name": "Windows x64 安装版", "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-x64.exe", "size": "1.6 MB", "platform": "Windows", "arch": "x64", "type": "installer" },
-        { "name": "Windows ARM64 安装版", "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-arm64.exe", "size": "1.6 MB", "platform": "Windows", "arch": "arm64", "type": "installer" },
-        { "name": "Windows 32 位安装版", "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409.exe", "size": "1.5 MB", "platform": "Windows", "arch": "x86", "type": "installer" },
-        { "name": "Linux x64 命令行版", "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-linux-x64.tar.xz", "size": "1.7 MB", "platform": "Linux", "arch": "x64", "type": "archive" },
-        { "name": "Linux ARM64 命令行版", "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-linux-arm64.tar.xz", "size": "1.7 MB", "platform": "Linux", "arch": "arm64", "type": "archive" }
+      "ID": "7zip",
+      "名称": "7-Zip",
+      "标语": "免费开源的高压缩率压缩 / 解压工具",
+      "描述": "7-Zip是一款完全免费、开源的压缩与解压工具，支持7z、zip、rar、tar、gz等常见格式。\n\n特点：\n\n-7z格式压缩率高，适合长期归档\n-自带Windows右键菜单\n-无广告、免费、开源\n-支持Windows与Linux\n\n本站优先提供官方7-Zip下载地址。",
+      "图标": "",
+      "类别": "工具",
+      "平台": ["Windows", "Linux"],
+      "标签": ["压缩", "解压", "开源", "免费", "7z"],
+      "版本": "26.03",
+      "releaseDate": "2026-09-03",
+      "已更新": "2026-09-03",
+      "大小": "约1.6 MB",
+      "许可证": "LGPL-2.1(部分BSD/unrar限制)",
+      "主页": "https://www.7-zip.org/",
+      "回购": "https://github.com/ip7z/7zip",
+      "要求": [
+        "Windows7/8/10/11",
+        "支持x86/x64/ARM64",
+        "Linux x64/ARM64/ARM32位(命令行版本)"
       ],
-      "changelog": [
+      "特色": 正确,
+      "下载": [
         {
-          "version": "24.09",
-          "date": "2024-11-29",
-          "notes": [
-            "修复了 7z 与 zip 解压时的若干安全问题",
-            "改进 ARM64 版本性能",
-            "更新简体中文语言文件"
-          ]
+          "名称": "Windows x64安装版",
+          "URL": "https://www.7-zip.org/a/7z2603-x64.exe",
+          "大小": "约1.6 MB",
+          "平台": "Windows",
+          "拱形": "x64",
+          "类型": "安装程序"
         },
         {
-          "version": "24.08",
-          "date": "2024-08-10",
-          "notes": ["新增对 ARM64 处理器优化的压缩算法", "修复 RAR 分卷解压失败的问题"]
+          "名称": "Windows ARM64安装版",
+          "URL": "https://www.7-zip.org/a/7z2603-arm64.exe",
+          "大小": "约1.5 MB",
+          "平台": "Windows",
+          "拱形": "arm64",
+          "类型": "安装程序"
+        },
+        {
+          "名称": "Windows32位安装版",
+          "URL": "https://www.7-zip.org/a/7z2603.exe",
+          "大小": "约1.3 MB",
+          "平台": "Windows",
+          "拱形": "x86",
+          "类型": "安装程序"
+        },
+        {
+          "名称": "Linux x64命令行版",
+          "URL": "https://www.7-zip.org/a/7z2603-linux-x64.tar.xz",
+          "大小": "约1.7 MB",
+          "平台": "Linux",
+          "拱形": "x64",
+          "类型": "存档"
+        },
+        {
+          "名称": "Linux ARM64命令行版",
+          "URL": "https://www.7-zip.org/a/7z2603-linux-arm64.tar.xz",
+          "大小": "约1.7 MB",
+          "平台": "Linux",
+          "拱形": "arm64",
+          "类型": "存档"
+        },
+        {
+          "名称": "官方全部下载",
+          "URL": "https://www.7-zip.org/download.html",
+          "大小": "-",
+          "平台": "All",
+          "类型": "链接"
         }
       ],
-      "history": [
+      "更改日志": [
         {
-          "version": "23.01",
-          "date": "2023-06-20",
-          "size": "1.5 MB",
-          "notes": ["稳定性更新"],
-          "downloads": [
-            { "name": "Windows x64（旧版）", "url": "https://github.com/ip7z/7zip/releases/download/23.01/7z2301-x64.exe", "size": "1.5 MB", "platform": "Windows", "arch": "x64", "type": "installer" }
+          "版本": "26.03",
+          "日期": "2026-09-03",
+          "备注": [
+            "更新至7-Zip26.03英寸,
+            "提供最新Windows x64/ARM64/x86版本",
+            "更新Linux命令行版本"
           ]
         }
-      ]
+      ],
+      "历史记录": []
     },
     {
-      "id": "umi-ocr",
-      "name": "Umi-OCR",
-      "tagline": "免费开源的离线批量 OCR 文字识别工具",
-      "description": "Umi-OCR 是一款开源、免费、**完全离线**的 OCR 截图识别与批量识别工具，对中文场景（截图、文档、表格）支持很好。\n\n- 截图识别、批量图片识别、PDF 识别\n- 离线运行，不需要联网，不上传任何图片\n- 支持 Windows 7 / 10 / 11，自带多种识别引擎\n\n这是我在整理资料时最常用的工具之一，识别中文的速度和准确率都不错。",
-      "icon": "",
-      "category": "工具",
-      "platforms": ["Windows"],
-      "tags": ["OCR", "文字识别", "离线", "中文", "开源"],
-      "version": "2.1.4",
-      "releaseDate": "2024-10-26",
-      "updated": "2024-10-26",
-      "size": "约 180 MB",
-      "license": "MIT",
-      "homepage": "https://github.com/hiroi-sora/Umi-OCR",
-      "repo": "https://github.com/hiroi-sora/Umi-OCR",
-      "requirements": ["Windows 7 / 8 / 10 / 11（x64）", "建议 4 GB 以上内存", "首次运行请解压到不含中文的路径"],
+      "ID": "umi-ocr",
+      "名称": "Umi-OCR",
+      "标语": "免费开源的离线批量 OCR 文字识别工具",
+      "描述": "Umi-OCR是一款免费、开源、完全离线的OCR文字识别工具，适合截图识字、批量图片识别以及PDF文档识别。\n\n-截图识别\n-批量图片识别\N-PDF/文档识别\n-完全离线运行\n-支持Windows7x64及以上\n\n官方同时提供GitHub、SourceForge和蓝奏云下载渠道。"，
+      "图标": "",
+      "类别": "工具",
+      "平台": ["Windows"],
+      "标签": ["OCR", "文字识别", "离线", "中文", "开源"],
+      "版本": "2.1.5",
+      "releaseDate": "2025-05-29",
+      "已更新": "2025-05-29",
+      "大小": "约180 MB",
+      "许可证": "MIT",
+      "主页": "https://github.com/hiroi-sora/Umi-OCR",
+      "回购": "https://github.com/hiroi-sora/Umi-OCR",
+      "要求": [
+        "Windows 7 x64 及以上",
+        "建议 4 GB 以上内存"
+      ],
       "featured": false,
       "downloads": [
-        { "name": "Windows x64 完整版（7z 压缩包）", "url": "https://github.com/hiroi-sora/Umi-OCR/releases/download/v2.1.4/Umi-OCR_Rapid_v2.1.4.7z", "size": "180 MB", "platform": "Windows", "arch": "x64", "type": "archive", "note": "解压即用，需要 7-Zip 或 WinRAR 解压" },
-        { "name": "全部版本（官方发布页）", "url": "https://github.com/hiroi-sora/Umi-OCR/releases/latest", "size": "-", "platform": "Windows", "type": "link" }
+        {
+          "name": "官方 GitHub 最新版本",
+          "URL": "https://github.com/hiroi-sora/Umi-OCR/releases/latest",
+          "大小": "-",
+          "平台": "Windows",
+          "拱形": "x64",
+          "类型": "链接"
+        },
+        {
+          "name": "官方蓝奏云下载",
+          "url": "https://hiroi-sora.lanzoul.com/s/umi-ocr",
+          "size": "-",
+          "platform": "Windows",
+          "arch": "x64",
+          "type": "link",
+          "note": "Umi-OCR 官方项目提供的国内下载渠道"
+        },
+        {
+          "name": "官方 SourceForge 下载",
+          "url": "https://sourceforge.net/projects/umi-ocr/",
+          "size": "-",
+          "platform": "Windows",
+          "arch": "x64",
+          "type": "link"
+        }
       ],
       "changelog": [
         {
-          "version": "2.1.4",
-          "date": "2024-10-26",
-          "notes": ["优化批量识别时的内存占用", "修复部分 PDF 页面识别乱码", "更新中文识别模型"]
+          "version": "2.1.5",
+          "date": "2025-05-29",
+          "notes": [
+            "更新 Umi-OCR 至 2.1.5",
+            "继续支持 Windows 7 x64 及以上",
+            "提供多种官方下载渠道"
+          ]
         }
       ],
       "history": []
@@ -88,66 +149,122 @@
       "id": "obs-studio",
       "name": "OBS Studio",
       "tagline": "开源免费的录屏与直播推流软件",
-      "description": "OBS Studio 是使用最广泛的开源录屏 / 直播软件，支持多场景切换、窗口采集、麦克风降噪、虚拟摄像头等。\n\n- 录屏、直播、虚拟摄像头三合一\n- 支持 Windows / macOS / Linux\n- 插件生态丰富，可扩展性很强\n\n> 提示：直播推流需要填写平台给你的推流地址与密钥，请自行从平台后台获取。",
+      "description": "OBS Studio 是一款开源免费的录屏、直播和视频采集软件。\n\n- 录屏\n- 直播推流\n- 窗口 / 游戏 / 摄像头采集\n- 虚拟摄像头\n- 支持 Windows / macOS / Linux\n- 拥有丰富的插件生态\n\n本站提供官方 OBS 下载页面，用户可以根据自己的系统选择对应版本。",
       "icon": "",
       "category": "其他",
       "platforms": ["Windows", "macOS", "Linux"],
       "tags": ["录屏", "直播", "推流", "开源", "视频"],
-      "version": "31.0.1",
-      "releaseDate": "2025-01-15",
-      "updated": "2025-01-15",
-      "size": "约 140 MB",
-      "license": "GPL-2.0",
-      "homepage": "https://obsproject.com/",
+      "version": "32.2.2",
+      "releaseDate": "2026-08-14",
+      "updated": "2026-08-14",
+      "大小": "约140 MB",
+      "许可证": "GPL-2.0",
+      "主页": "https://obsproject.com/",
       "repo": "https://github.com/obsproject/obs-studio",
-      "requirements": ["Windows 10 / 11（x64）", "macOS 12 及以上", "Ubuntu 22.04 / 24.04 或同等发行版", "建议独立显卡或支持硬件编码的 CPU"],
+      "requirements": [
+        "Windows 10 / 11",
+        "macOS 13.0 及以上",
+        "Linux"
+      ],
       "featured": true,
       "downloads": [
-        { "name": "Windows x64 安装版", "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-Windows-Installer.exe", "size": "142 MB", "platform": "Windows", "arch": "x64", "type": "installer" },
-        { "name": "macOS Apple Silicon", "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-macOS-Apple.dmg", "size": "168 MB", "platform": "macOS", "arch": "arm64", "type": "dmg" },
-        { "name": "Linux Ubuntu 24.04 (deb)", "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-Ubuntu-24.04-x86_64.deb", "size": "135 MB", "platform": "Linux", "arch": "x64", "type": "deb" },
-        { "name": "Linux AppImage", "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-x86_64.AppImage", "size": "150 MB", "platform": "Linux", "arch": "x64", "type": "appimage" }
-      ],
-      "changelog": [
         {
-          "version": "31.0.1",
-          "date": "2025-01-15",
-          "notes": ["修复 31.0 版本中若干推流中断问题", "改进 macOS 录屏权限引导", "新增 AV1 硬件编码支持"]
+          "name": "Windows 官方下载",
+          "url": "https://obsproject.com/download",
+          "size": "-",
+          "platform": "Windows",
+          "arch": "x64",
+          "type": "link"
+        },
+        {
+          "name": "macOS 官方下载",
+          "url": "https://obsproject.com/download",
+          "size": "-",
+          "platform": "macOS",
+          "arch": "x64 / arm64",
+          "type": "link"
+        },
+        {
+          "名称"："Linux官方下载",
+          "URL": "https://obsproject.com/download",
+          "大小": "-",
+"应用程序""平台":"Linux",
+          "拱形": "x64",
+          "类型": "链接"
         }
       ],
-      "history": []
+      "更改日志": [
+        {
+          "版本": "32.2.2",
+          "日期": "2026-08-14",
+          "备注": [
+            "更新至OBS Studio32.2.2",
+            "继续支持Windows/macOS/Linux",
+            "使用官方 OBS 下载渠道"
+          ]
+        }
+      ],
+      "历史记录": []
     },
     {
-      "id": "termux",
-      "name": "Termux",
-      "tagline": "Android 上的 Linux 终端模拟器",
-      "description": "Termux 让你在 Android 手机上拥有一个完整的 Linux 命令行环境，可以安装 Python、Git、Node.js、SSH 等工具。\n\n- 不需要 root 权限\n- 自带包管理器 `pkg` / `apt`，可安装上千个软件包\n- 适合在手机上跑脚本、当 SSH 客户端、做简单开发\n\n**请注意：请从官方 GitHub Release 或 F-Droid 下载，不要从第三方应用商店安装，以免被植入恶意代码。**",
-      "icon": "",
-      "category": "Android",
-      "platforms": ["Android"],
-      "tags": ["终端", "Linux", "命令行", "开源", "开发"],
-      "version": "0.118.1",
-      "releaseDate": "2025-01-01",
-      "updated": "2025-01-01",
-      "size": "约 110 MB",
-      "license": "GPL-3.0",
-      "homepage": "https://termux.dev/",
-      "repo": "https://github.com/termux/termux-app",
-      "requirements": ["Android 7.0 及以上", "ARM64 设备（绝大多数现代手机）", "需要允许安装未知来源应用"],
-      "featured": false,
-      "downloads": [
-        { "name": "Android ARM64 APK", "url": "https://github.com/termux/termux-app/releases/download/v0.118.1/termux-app_v0.118.1+github-debug_arm64-v8a.apk", "size": "110 MB", "platform": "Android", "arch": "arm64", "type": "apk" },
-        { "name": "Android 通用 APK", "url": "https://github.com/termux/termux-app/releases/download/v0.118.1/termux-app_v0.118.1+github-debug_universal.apk", "size": "120 MB", "platform": "Android", "arch": "universal", "type": "apk" },
-        { "name": "F-Droid 版本（推荐日常使用）", "url": "https://f-droid.org/packages/com.termux/", "size": "-", "platform": "Android", "type": "link", "note": "F-Droid 会自动更新，比 GitHub debug 版更省心" }
+      "ID": "Termux",
+      "名称": "Termux",
+      "标语": "Android上的Linux终端模拟器",
+      "描述": "Termux可以在安卓手机上提供Linux命令行环境，可以安装Python、Git、Node.js、SSH等工具。\n\n-不需要root权限\n-支持pkg/apt包管理器\n-可以运行shell、Python等程序\n-适合手机开发、SSH和脚本运行\n\n请注意：Termux的不同发行渠道使用不同的签名，F-Droid、GitHub和谷歌应用商店版本不要混装。",
+      "图标": "",
+      "类别": "安卓",
+      "平台": ["安卓"],
+      "标签": ["终端", "Linux", "命令行", "开源", "开发"],
+      "版本": "0.118.3",
+      "releaseDate": "2026",
+      "已更新": "2026",
+      "大小": "约180MB(含基础环境)",
+      "许可证": "GPL-3.0",
+      "主页": "https://termux.dev/",
+      "回购": "https://github.com/termux/termux-app",
+      "要求": [
+        "Android7.0及以上",
+        "支持ARM64/ARMv7/x86/x86_64"
       ],
-      "changelog": [
+      "特色": 假的,
+      "下载": [
         {
-          "version": "0.118.1",
-          "date": "2025-01-01",
-          "notes": ["适配 Android 14 / 15", "修复部分设备上的存储权限问题", "更新 bootstrap 包"]
+          "名称": "Termux官方GitHub发布",
+          "URL": "https://github.com/termux/termux-app/releases/latest",
+          "大小": "-",
+          "平台": "安卓",
+          "拱形": "arm64/armv7/x86/x86_64",
+          "类型": "链接"
+        },
+        {
+          "名称": "Termux官方F-Droid",
+          "URL": "https://f-droid.org/packages/com.termux/",
+          "大小": "-",
+          "平台": "安卓",
+          "拱形": "通用",
+          "类型": "链接",
+          "注意": "官方支持的F-Droid下载渠道"
+        },
+        {
+          "名称": "Termux官方网站",
+          "URL": "https://termux.dev/",
+          "大小": "-",
+          "平台": "安卓",
+          "类型": "链接"
         }
       ],
-      "history": []
+      "更改日志": [
+        {
+          "版本": "0.118.3",
+          "日期": "2026",
+          "备注": [
+            "更新至Termux0.118.3",
+            "继续支持Android7.0及以上",
+            "提供GitHub和F-Droid官方下载渠道"
+          ]
+        }
+      ],
+      "历史记录": []
     }
   ]
 }
