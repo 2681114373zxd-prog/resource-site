@@ -234,7 +234,10 @@ ${urls
 User-agent: *
 Allow: /
 
-# 说明：不要屏蔽 /js/ 与 /data/ —— 搜索引擎需要用它们渲染页面（本站是纯静态站，没有后台接口）
+# 说明：不要屏蔽 /js/ 与 /data/ —— 搜索引擎需要用它们渲染页面（本站是纯静态站）
+
+# 后台页面不收录：它只是个连 GitHub API 的界面，没有令牌什么也做不了
+Disallow: /admin/
 
 Sitemap: ${absolute(site, 'sitemap.xml')}
 `;
@@ -332,8 +335,16 @@ ${feedItems
   // 6. 复制到 dist/ --------------------------------------------------------
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
-  const skip = new Set(['.git', 'node_modules', 'dist', '.github', 'scripts']);
-  await copyTree(ROOT, DIST, skip);
+  // dist/ 会原样发布到公网，所以下面这些东西绝不能进去：
+  //   · data/admin.json —— 本地后台的明文密码（本地服务器会拦，静态托管可不会）
+  //   · .wrangler/ —— wrangler 的本地缓存
+  //   · scripts/ —— 构建 / 发布工具，公网上用不到
+  //   · .git / .github / node_modules / dist 自身
+  // admin/ 现在要进 dist/：A 方案下它跟着网站一起部署，用 GitHub 令牌直接调 API，
+  // 不需要本机跑 Node 服务（见 README 的「在线后台」一节）。
+  const skip = new Set(['.git', '.github', '.wrangler', 'node_modules', 'dist', 'scripts']);
+  const skipPaths = new Set(['data/admin.json']);
+  await copyTree(ROOT, DIST, skip, skipPaths);
   ok('dist/（可直接作为部署输出目录）');
 
   const seconds = ((Date.now() - started) / 1000).toFixed(2);
@@ -341,16 +352,21 @@ ${feedItems
   log('  本地预览：npm run dev      部署：见 README.md\n');
 }
 
-/** 递归复制（跳过 skip 里的目录/文件） */
-async function copyTree(from, to, skip) {
+/**
+ * 递归复制。
+ *   skip      —— 按「名字」跳过（任何一层目录里叫这个名字的都不复制）
+ *   skipPaths —— 按「相对根目录的路径」跳过，用于 data/admin.json 这种同名的文件
+ */
+async function copyTree(from, to, skip, skipPaths = new Set(), rel = '') {
   const entries = await readdir(from, { withFileTypes: true });
   for (const entry of entries) {
-    if (skip.has(entry.name)) continue;
+    const relPath = rel ? `${rel}/${entry.name}` : entry.name;
+    if (skip.has(entry.name) || skipPaths.has(relPath)) continue;
     const src = join(from, entry.name);
     const dest = join(to, entry.name);
     if (entry.isDirectory()) {
       await mkdir(dest, { recursive: true });
-      await copyTree(src, dest, skip);
+      await copyTree(src, dest, skip, skipPaths, relPath);
     } else {
       await copyFile(src, dest);
     }

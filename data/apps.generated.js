@@ -1,13 +1,13 @@
 /* 由 scripts/build.mjs 自动生成，请勿手动修改。
    数据来源：data/site.json + data/categories.json + data/apps.json
-   生成时间：2026-09-20T09:26:38.539Z */
+   生成时间：2026-09-21T07:04:48.487Z */
 window.SITE_DATA = {
-  "generatedAt": "2026-09-20T09:26:38.539Z",
+  "generatedAt": "2026-09-21T07:04:48.487Z",
   "site": {
-    "name": "DevShelf",
-    "nameCn": "开发者资源站",
+    "name": "Xixi",
+    "nameCn": "Xixi 软件站",
     "tagline": "我自己制作与整理的软件、安装包与资源合集",
-    "description": "DevShelf 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。",
+    "description": "Xixi 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。",
     "keywords": [
       "软件下载",
       "安装包",

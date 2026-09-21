@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Xixi 后台 · 发布软件与一键上传</title>
+  <link rel="icon" href="../assets/favicon/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <script>
+    // 和网站用同一套主题，跟着系统深浅色走
+    (function () {
+      try {
+        var saved = localStorage.getItem('resource-site-theme');
+        var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="admin">
+  <header class="admin-header">
+    <div class="container admin-header-inner">
+      <div class="admin-brand">
+        <img src="../assets/images/logo.svg" width="28" height="28" alt="">
+        <strong>Xixi 后台</strong>
+        <span class="admin-badge" data-tool-version>v—</span>
+        <span class="admin-badge" data-mode>检查运行方式…</span>
+      </div>
+      <div class="admin-header-actions">
+        <span class="admin-muted" data-site-summary></span>
+        <a class="btn btn-soft btn-sm" href="../index.html" target="_blank" rel="noopener">打开网站</a>
+        <button class="btn btn-ghost btn-sm" type="button" data-logout hidden>退出登录</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container admin-main">
+    <!-- ============ 连接 GitHub（在线后台 / A 方案） ============ -->
+    <!-- 页面部署在公网时（没有本机 Node 服务）显示这一块：
+         粘一个细粒度令牌，之后所有发布都直接调 GitHub API 完成。 -->
+    <section class="admin-card admin-login admin-connect" data-connect hidden>
+      <h1>连接 GitHub</h1>
+      <p class="admin-muted">
+        这个页面是<b>在线后台</b>：发布时由你的浏览器直接调 GitHub API，安装包进 Releases，
+        <code>data/apps.json</code> 直接提交，随后 GitHub Actions 会自动重新构建网站。
+        令牌只存在你这台电脑的浏览器里，只发给 <code>api.github.com</code>。
+      </p>
+      <form class="admin-login-form admin-connect-form" data-connect-form>
+        <label class="admin-label">GitHub 令牌
+          <input class="admin-input" type="password" data-github-token
+                 placeholder="github_pat_… 或 ghp_…" autocomplete="off" spellcheck="false" required>
+        </label>
+        <label class="admin-label">仓库
+          <input class="admin-input" data-github-repo placeholder="2681114373zxd-prog/resource-site" required>
+        </label>
+        <label class="admin-label">分支
+          <input class="admin-input" data-github-branch placeholder="留空就用仓库默认分支">
+        </label>
+        <div class="admin-row">
+          <button class="btn btn-primary" type="submit">连接</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-disconnect hidden>清除已保存的令牌</button>
+        </div>
+      </form>
+      <p class="admin-muted admin-small" data-connect-status></p>
+      <p class="admin-error" data-connect-error hidden></p>
+      <details class="admin-muted admin-small">
+        <summary>令牌怎么建？</summary>
+        <p>
+          GitHub → 右上角头像 → <b>Settings</b> → <b>Developer settings</b> →
+          <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>，然后：
+        </p>
+        <p>
+          ① <b>Repository access</b> 选 <b>Only select repositories</b>，只勾 <code>resource-site</code>；
+          ② <b>Permissions</b> → <b>Repository permissions</b> → <b>Contents</b> 选 <b>Read and write</b>；
+          ③ 生成后那串 <code>github_pat_…</code> 只会显示一次，复制过来粘在上面。
+        </p>
+        <p>只给这一个仓库、只给 Contents 读写就够了，别开全仓库权限。不用了随时在 GitHub 上撤销。</p>
+      </details>
+    </section>
+
+    <!-- ====================== 登录 ====================== -->
+    <section class="admin-card admin-login" data-login hidden>
+      <h1>登录后台</h1>
+      <p class="admin-muted">
+        密码保存在 <code>data/admin.json</code>（不会提交到 GitHub）；启动后台时终端里也会打印一次。
+      </p>
+      <form class="admin-login-form" data-login-form>
+        <input class="admin-input" type="password" data-password placeholder="后台密码" autocomplete="current-password" required>
+        <button class="btn btn-primary" type="submit">登录</button>
+      </form>
+      <p class="admin-error" data-login-error hidden></p>
+    </section>
+
+    <!-- ====================== 主体 ====================== -->
+    <div data-app hidden>
+      <nav class="admin-tabs" aria-label="后台功能">
+        <button type="button" data-tab-btn="publish" aria-pressed="true">发布软件</button>
+        <button type="button" data-tab-btn="manage" aria-pressed="false">软件管理</button>
+        <button type="button" data-tab-btn="site" aria-pressed="false">站点信息</button>
+        <button type="button" data-tab-btn="github" aria-pressed="false">上传到 GitHub</button>
+      </nav>
+
+      <!-- ---------------- 发布软件 ---------------- -->
+      <section class="admin-card" data-tab="publish">
+        <div class="admin-card-head">
+          <h2>发布软件</h2>
+          <span class="admin-muted" data-mode-hint></span>
+        </div>
+
+        <div class="admin-grid">
+          <div>
+            <label class="admin-label">安装包</label>
+            <div class="dropzone" data-drop tabindex="0">
+              <input type="file" data-file hidden>
+              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+              <p data-drop-text>把安装包拖进来，或点这里选择文件</p>
+              <p class="admin-muted admin-small" data-upload-hint>支持 .exe / .msi / .apk / .dmg / .deb / .zip 等；上限 4 GB</p>
+            </div>
+            <div class="admin-progress" data-progress hidden><span data-progress-bar></span></div>
+            <p class="admin-muted admin-small" data-file-info>还没有选择文件</p>
+            <label class="admin-label" data-direct-url-box hidden>已有下载直链（可选）
+              <input class="admin-input" data-direct-url placeholder="安装包已经放在别处？把 https:// 直链粘在这里">
+            </label>
+          </div>
+
+          <div class="admin-fields">
+            <label class="admin-label">软件名字<span class="admin-required">*</span>
+              <input class="admin-input" data-field="name" placeholder="例如 我的工具箱">
+            </label>
+
+            <label class="admin-label">网址短名（id）
+              <span class="admin-inline">
+                <input class="admin-input" data-field="id" placeholder="例如 my-tool">
+                <button class="btn btn-soft btn-sm" type="button" data-gen-id>自动生成</button>
+              </span>
+            </label>
+
+            <label class="admin-label">版本号
+              <span class="admin-inline">
+                <input class="admin-input" data-field="version" placeholder="1.0.0">
+                <button class="btn btn-soft btn-sm" type="button" data-bump="patch">补丁 +1</button>
+                <button class="btn btn-soft btn-sm" type="button" data-bump="minor">小版本 +1</button>
+              </span>
+            </label>
+
+            <div class="admin-two">
+              <label class="admin-label">分类
+                <select class="admin-input" data-field="category"></select>
+              </label>
+              <label class="admin-label">平台
+                <select class="admin-input" data-field="platform">
+                  <option>Windows</option><option>macOS</option><option>Linux</option>
+                  <option>Android</option><option>全平台</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="admin-two">
+              <label class="admin-label">架构
+                <select class="admin-input" data-field="arch">
+                  <option value="x64">x64</option><option value="arm64">arm64</option>
+                  <option value="x86">x86</option><option value="universal">universal</option>
+                </select>
+              </label>
+              <label class="admin-label">类型
+                <select class="admin-input" data-field="type">
+                  <option value="installer">installer 安装版</option>
+                  <option value="portable">portable 免安装</option>
+                  <option value="apk">apk</option>
+                  <option value="dmg">dmg</option>
+                  <option value="deb">deb</option>
+                  <option value="appimage">appimage</option>
+                  <option value="archive">archive 压缩包</option>
+                  <option value="link">link 外链</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="admin-label">一句话介绍
+              <input class="admin-input" data-field="tagline" placeholder="例如 轻量好用的截图工具">
+            </label>
+
+            <label class="admin-label">这次更新了什么（多条用分号隔开）
+              <input class="admin-input" data-field="notes" placeholder="例如 修复崩溃；新增深色模式">
+            </label>
+
+            <label class="admin-check">
+              <input type="checkbox" data-field="featured"> 在首页置顶（加星标）
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-row">
+            <button class="btn btn-primary" type="button" data-save data-local-only>保存并构建</button>
+            <button class="btn btn-primary" type="button" data-save-push>保存并一键上传到 GitHub</button>
+            <button class="btn btn-ghost" type="button" data-reset>清空表单</button>
+          <span class="admin-status" data-status></span>
+        </div>
+        <pre class="admin-log" data-log hidden></pre>
+      </section>
+
+      <!-- ---------------- 软件管理 ---------------- -->
+      <section class="admin-card" data-tab="manage" hidden>
+        <div class="admin-card-head">
+          <h2>软件管理</h2>
+          <span class="admin-muted"><span data-count-apps>0</span> 个软件 · <span data-count-packages>0</span> 个安装包</span>
+        </div>
+        <input class="admin-input" data-search placeholder="搜索名字 / 短名 / 分类">
+        <div class="admin-list" data-apps-list></div>
+      </section>
+
+      <!-- ---------------- 站点信息 ---------------- -->
+      <section class="admin-card" data-tab="site" hidden>
+        <div class="admin-card-head">
+          <h2>站点信息</h2>
+          <span class="admin-muted">对应 data/site.json</span>
+        </div>
+        <div class="admin-two">
+          <label class="admin-label">站名<input class="admin-input" data-site-field="name"></label>
+          <label class="admin-label">网址<input class="admin-input" data-site-field="url"></label>
+        </div>
+        <label class="admin-label">副标题<input class="admin-input" data-site-field="tagline"></label>
+        <label class="admin-label">站点简介<textarea class="admin-input" rows="3" data-site-field="description"></textarea></label>
+        <div class="admin-two">
+          <label class="admin-label">主题色<input class="admin-input" data-site-field="accent" placeholder="#4f7cff"></label>
+          <label class="admin-label">副主题色<input class="admin-input" data-site-field="accent2" placeholder="#7c5cff"></label>
+        </div>
+        <label class="admin-label">搜索关键词（逗号分隔）<input class="admin-input" data-site-field="keywords"></label>
+        <label class="admin-label">页脚说明<input class="admin-input" data-site-field="footerNote"></label>
+        <div class="admin-row">
+          <button class="btn btn-primary" type="button" data-save-site>保存并构建</button>
+          <span class="admin-status" data-site-status></span>
+        </div>
+      </section>
+
+      <!-- ---------------- 上传到 GitHub ---------------- -->
+      <section class="admin-card" data-tab="github" hidden>
+        <div class="admin-card-head">
+          <h2>一键上传到 GitHub</h2>
+          <button class="btn btn-soft btn-sm" type="button" data-refresh-git>刷新状态</button>
+        </div>
+        <div class="admin-git" data-git-box></div>
+        <p class="admin-muted admin-small" data-online-note hidden>
+          在线后台是<b>边发布边提交</b>的：每次「保存并提交」就已经把安装包和
+          <code>data/apps.json</code> 提交进仓库了，这里只显示仓库当前状态。
+          提交之后 GitHub Actions 会自动重新构建并部署，进度可以在
+          <a data-actions-link href="#" target="_blank" rel="noopener">Actions 页面</a>看。
+        </p>
+        <label class="admin-label" data-local-only>提交说明
+          <input class="admin-input" data-commit-message placeholder="例如 add: 我的工具箱 v1.0.0">
+        </label>
+        <div class="admin-row">
+          <button class="btn btn-primary" type="button" data-publish data-local-only>一键上传到 GitHub</button>
+          <span class="admin-status" data-publish-status></span>
+        </div>
+        <pre class="admin-log" data-publish-log hidden></pre>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container admin-footer">
+    <span>Xixi 后台 · <span data-tool-version>v—</span> · <span data-footer-hint>只监听 127.0.0.1，关掉窗口即关闭</span></span>
+    <span>命令行发布：<code>npm run publish -- "安装包" "名字"</code></span>
+  </footer>
+
+  <!-- admin-lib.js：scripts/json-style.mjs + scripts/app-data.mjs 打包成的浏览器版，
+       和本地后台用的是同一套「只改那一段」的 JSON 逻辑（window.XIXI_DATA） -->
+  <script src="../js/admin-lib.js"></script>
+  <!-- admin-github.js：在线后台直接调 GitHub API（window.XIXI_GITHUB） -->
+  <script src="../js/admin-github.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

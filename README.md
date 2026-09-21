@@ -1,6 +1,15 @@
-# DevShelf · 个人软件 / 资源下载站
+# Xixi · 个人软件 / 资源下载站
 
-一个**纯静态**的个人软件下载站：HTML + CSS + 原生 JavaScript，没有任何前端框架、没有后端、没有数据库、没有登录，也不需要 `npm install` 装依赖。所有内容都来自 `data/` 目录下的 JSON 文件，你用记事本改 JSON、把安装包丢进 `downloads/`，然后 `git push`，网站就更新了。
+一个**纯静态**的个人软件下载站：HTML + CSS + 原生 JavaScript，没有任何前端框架，也不需要 `npm install` 装依赖。所有内容都来自 `data/` 目录下的 JSON 文件。
+
+发布软件有四种方式，从省事到彻底手动：
+
+1. **在线后台**：打开 `https://2681114373.ccwu.cc/admin/`，粘一个 GitHub 令牌，然后把安装包拖进去 —— 安装包会传进 GitHub Releases，`data/apps.json` 直接提交，随后 GitHub Actions 自动重建网站。**不用在自己电脑上跑任何东西，换台电脑照样用。**
+2. **本地后台**（本机图形界面）：双击 `Xixi后台.cmd`，把安装包拖进去、填个名字和版本号，点「保存并构建」，再点「一键上传到 GitHub」——完事。
+3. **一键发布命令**：`npm run publish -- "D:\下载\某软件.exe" "某软件"`，或者把安装包直接拖到 `发布软件.cmd` 上。
+4. **手写 JSON**：自己编辑 `data/apps.json` + 把安装包丢进 `downloads/` + `npm run build` + `git push`。
+
+公开站点本身仍然是纯静态的：没有数据库、没有服务端接口、没有第三方请求。两种后台都是**没有服务器**的：本地后台跑在你自己电脑的 `127.0.0.1` 上，密码存在本地；在线后台用的是你自己浏览器里的 GitHub 令牌，令牌只发给 `api.github.com`，不经过任何第三方。
 
 **主要特性**
 
@@ -9,6 +18,11 @@
 - 自动识别访客系统（Windows / macOS / Linux / Android），把对应安装包排在前面并标注「推荐给你」
 - 构建时自动生成 `sitemap.xml`、`robots.txt`、`feed.xml`（RSS 更新订阅）、favicon 与分享封面图
 - 所有文本都经过 HTML 转义，下载链接只允许 `http(s)` 与站内相对路径，无跟踪、无第三方脚本
+- 一键发布 / 本地后台：自动算大小与 SHA256、按后缀猜平台架构、版本号自动 +1、老版本自动进「历史版本」
+- 「一键上传到 GitHub」会在后台页面里显示 `git add` / `commit` / `push` 每一步的真实日志
+- 在线后台（`/admin/`）：页面直接调 GitHub API，不需要服务器；令牌只存在浏览器本地，随时可在 GitHub 撤销
+- 两种后台共用同一套「只改那一段」的 JSON 改写逻辑，所以手写风格的 `apps.json` 不会被整体重排版
+- 工具自身有版本号（`package.json` 的 `version`，当前 **v1.2.0**），更新历史见 `CHANGELOG.md`
 
 ---
 
@@ -30,6 +44,7 @@
 ├── downloads/                  安装包放这里（附说明；大文件建议用 GitHub Releases）
 ├── assets/
 │   ├── css/style.css           全站样式（配色变量在文件顶部）
+│   ├── css/admin.css           后台界面样式
 │   ├── images/logo.svg         网站 Logo（想换 Logo 直接替换这个文件）
 │   ├── images/og-cover.png     社交分享封面图（1200×630，可用 npm run icons 重新生成）
 │   ├── favicon/                favicon.svg / favicon-32.png / apple-touch-icon.png
@@ -40,19 +55,31 @@
 │   ├── render.js               用数据生成 HTML（浏览器和构建脚本共用同一份代码）
 │   ├── main.js                 首页逻辑
 │   ├── app-page.js             详情页逻辑
+│   ├── admin.js                本地后台的界面逻辑（只在 npm run admin 时打开）
+│   ├── admin-github.js         在线后台：直接调 GitHub API（不用服务器，见第四节第 2 小节）
+│   ├── admin-lib.js            ★ 自动生成：把 scripts/json-style.mjs + app-data.mjs 打包给浏览器
 │   ├── home.js                 ★ 自动生成：把上面几个模块打包成普通脚本给首页用
 │   └── app.js                  ★ 自动生成：把上面几个模块打包成普通脚本给详情页用
+├── admin/index.html            ★ 后台界面（本地后台 / 在线后台共用；会跟着网站一起部署）
 ├── scripts/                    构建与维护脚本（Node，零依赖）
 │   ├── build.mjs               构建：生成详情页 / sitemap / robots / feed / dist
 │   ├── bundle.mjs              把 js/ 里的 ES 模块打包成普通脚本（见下文说明）
 │   ├── serve.mjs               本地预览服务器
 │   ├── dev.mjs                 本地开发：构建 + 预览 + 自动重建
-│   ├── new-app.mjs             交互式添加新软件
+│   ├── new-app.mjs             交互式添加新软件（一问一答，适合慢慢填）
+│   ├── publish.mjs             ★ 一键发布：安装包 + 名字 = 网站上多一个软件
+│   ├── files.mjs               安装包相关的共用小工具（大小 / SHA256 / 猜平台）
+│   ├── admin-server.mjs        ★ 本地后台服务器（npm run admin，浏览器里管理站点）
+│   ├── app-data.mjs            发布共用的数据逻辑（合并下载项 / 版本 +1 / 历史版本）
+│   ├── json-style.mjs          按手写风格局部改写 JSON（不重排整个 apps.json）
 │   ├── check.mjs               检查数据有没有写错
 │   ├── hash.mjs                计算安装包大小与 SHA256
 │   ├── make-icons.mjs          生成 favicon 与分享封面图
 │   ├── validate.mjs            校验逻辑（build 与 check 共用）
 │   └── templates/detail.html   详情页模板（改详情页版式改这里）
+├── 发布软件.cmd                Windows 下把安装包拖上去就能发布
+├── Xixi后台.cmd                Windows 下双击打开本地后台
+├── CHANGELOG.md                工具自身的版本更新记录
 ├── dist/                       构建输出（部署用；不需要时删掉，下次构建会重新生成）
 ├── sitemap.xml / robots.txt / feed.xml    自动生成
 ├── .github/workflows/deploy.yml           GitHub Actions 自动部署
@@ -108,9 +135,11 @@ npm run dev -- --lan
 | 命令 | 作用 |
 | --- | --- |
 | `npm run dev` | 本地开发（构建 + 预览 + 自动重建），最常用 |
+| `npm run admin` | ★ 打开本地后台（浏览器里发布软件、改站点信息、一键上传到 GitHub） |
+| `npm run publish -- "安装包" "名字"` | ★ 一键发布：复制安装包 + 写数据 + 构建（加 `--push` 连推送一起做） |
 | `npm run build` | 只构建：生成详情页、sitemap、feed、dist（提交前跑一次） |
 | `npm run check` | 只检查 `data/`：id 重复、下载链接写错、文件不存在…… |
-| `npm run new` | 交互式添加一个新软件（推荐新手用这个） |
+| `npm run new` | 交互式添加一个新软件（一问一答，适合慢慢填字段） |
 | `npm run hash -- downloads/xx.exe` | 计算文件大小 + SHA256，并输出可粘贴的 JSON |
 | `npm run icons` | 重新生成 favicon / Logo / 分享封面图 |
 | `npm run serve` | 只启动预览服务器（不构建） |
@@ -194,7 +223,116 @@ git push -u origin main
 
 ---
 
-## 四、日常维护（重点）
+## 四、发布软件（本地后台 / 在线后台 / 命令行）
+
+### 1. 本地后台（图形界面，最省事）
+
+双击项目里的 **`Xixi后台.cmd`**（或者在项目目录执行 `npm run admin`），终端里会打印地址和密码：
+
+```
+▶ Xixi 本地后台 v1.2.0
+  地址：http://127.0.0.1:8787/admin/
+  密码：xixi-16dfb4   ← 第一次运行自动生成（也在 data/admin.json 里）
+```
+
+浏览器打开那个地址、输入密码，就能：
+
+- **发布软件**：把安装包拖进去 → 填软件名字（网址短名、版本号、平台、架构会自动填好）→ 点「保存并构建」
+- **保存并一键上传到 GitHub**：连 `git add` / `git commit` / `git push` 一起做完，页面下方显示每一步的真实输出
+- **软件管理**：搜索、编辑、删除（删除时可以连它独占的安装包文件一起删掉）、打开详情页预览
+- **站点信息**：改站名、副标题、简介、主题色、页脚说明，改完自动重新构建
+- **上传到 GitHub**：单独执行一次上传，并查看当前分支、远程仓库地址、未提交的改动数量
+
+几个要点：
+
+- 只监听 `127.0.0.1`，外网访问不到；**关掉那个黑窗口就等于关掉后台**
+- 密码存在 `data/admin.json`（已在 `.gitignore` 里，不会提交）。想换密码：`npm run admin -- --password 新密码`
+- 换端口：`npm run admin -- --port 9000`；想启动后自动打开浏览器：`npm run admin -- --open`
+- 只用 Node 自带模块，不需要 `npm install`
+- 单个安装包上限 4 GB；更大的文件建议放 GitHub Releases / 对象存储，`url` 填外链
+- 后台只跑在你自己电脑上，界面里的东西不会进公网；密码文件 `data/admin.json` 构建时会被挡在 `dist/` 之外
+
+### 2. 在线后台（部署在网站上，换台电脑也能用）
+
+本地后台要开着自己电脑才行。**在线后台**把同一个界面部署到网站上，打开就能用：
+
+```
+https://2681114373.ccwu.cc/admin/
+```
+
+第一次打开会让你**连接 GitHub**，只要填两样：
+
+| 填什么 | 说明 |
+| --- | --- |
+| GitHub 令牌 | 一串 `github_pat_…`，怎么建见下面 |
+| 仓库 | 一般已经自动填好 `2681114373zxd-prog/resource-site`，不用改 |
+
+连上之后和本地后台一样：拖安装包 → 填名字 → 点「保存并提交到 GitHub」。区别是：
+
+- 安装包传进 **GitHub Releases**（每个版本一个 release），`data/apps.json` 里记的是 Release 直链
+- 提交之后 **GitHub Actions 自动重建并部署**，一分钟左右网站就更新了
+- 安装包放在 Releases 里、不进 git 历史，所以不会把仓库撑大，单文件也不受 100 MB 限制
+
+**怎么建令牌**（只给这一个仓库、只给 Contents 读写，别开全仓库权限）：
+
+1. GitHub → 右上角头像 → **Settings** → **Developer settings** → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**
+2. **Repository access** 选 **Only select repositories**，只勾 `resource-site`
+3. **Permissions** → **Repository permissions** → **Contents** 改成 **Read and write**
+4. 生成后那串 `github_pat_…` 只显示一次，复制过来粘到后台页面上
+
+要点：
+
+- 令牌只存在**你浏览器的 localStorage** 里，只发给 `api.github.com`，不经过任何第三方服务器
+- 页面本身公开可见，但没有令牌**谁也改不了你的仓库**；`robots.txt` 也屏蔽了 `/admin/`
+- 不想用了：点页面上的「清除已保存的令牌」，或者直接去 GitHub 撤销令牌（撤销后页面立刻失效）
+- 单个附件上限 2 GB；再大的先自己传到 Releases 或对象存储，把直链填进「已有下载直链」
+- 提交撞车（比如你同时在本地改）会自动重读重试 3 次
+
+### 3. 一键发布命令（命令行 / 拖拽）
+
+**用法一：拖拽。** 把安装包直接拖到项目里的 `发布软件.cmd` 上，按提示输入软件名字，剩下的它自己干。
+
+**用法二：命令行。**
+
+```bash
+# 最简：安装包 + 名字
+npm run publish -- "D:\下载\MyTool-1.2.3-x64.exe" "我的工具"
+
+# 更全：指定短名、版本号、更新说明，发布完直接上传到 GitHub
+npm run publish -- "D:\下载\MyTool-1.2.3-x64.exe" "我的工具" --id my-tool \
+  --version 1.2.3 --notes "修复闪退;新增深色模式" --push
+```
+
+它会依次：复制安装包到 `downloads/` → 算文件大小和 SHA256 → 按后缀猜平台 / 架构 / 类型 → 写进 `data/apps.json` → 重新构建 → 自检 → 问你（或直接）提交推送。
+
+常用参数：
+
+| 参数 | 说明 |
+| --- | --- |
+| `--id <短名>` | 网址用的 id，例如 `my-tool`；**已经存在同 id 时自动按「更新这个软件」处理** |
+| `--version <版本号>` | 默认 `1.0.0` |
+| `--bump patch\|minor\|major` | 在已有版本号上自动 +1（`1.2.3` → `1.2.4` / `1.3.0` / `2.0.0`） |
+| `--category <分类>` | 默认按平台猜（Windows / Android / Linux / macOS / 工具 / 其他） |
+| `--platform` / `--arch` / `--type` | 猜错了可以用这些覆盖 |
+| `--tagline <一句话>` | 卡片上的一句话介绍 |
+| `--notes "a;b"` | 这次更新了什么，会写进「更新日志」 |
+| `--featured` | 在首页置顶并加星标 |
+| `--push` | 发布完自动 `git commit` + `git push` |
+| `--no-build` | 只改数据，不重新构建 |
+
+几条规则（后台和命令行完全一致）：
+
+- 同一个软件、同一个「平台 + 架构」再次发布，就是**替换**那个下载按钮（例如 Windows x64 换了新版本）；换了平台则是**新增**一个按钮
+- 版本号变化时，**上一个版本会自动进「历史版本」**，详情页上能看到旧版下载
+- 重名的安装包不会被覆盖，会自动改成 `xxx-2.exe` 这样的名字
+- 下载地址会写成 `downloads/文件名`，中文文件名会自动换成 `短名-版本.后缀`
+
+---
+
+## 五、日常维护（重点）
+
+> 只是加软件、更新软件的话，用上一节的「本地后台」或 `npm run publish` 就够了。
+> 下面这些是「手工操作」的完整说明，字段含义、批量调整、隐藏/删除等场景还是得看这里。
 
 ### 1. 添加一个新软件
 
@@ -332,7 +470,7 @@ git add . && git commit -m "add mytool" && git push
 
 ---
 
-## 五、数据字段说明
+## 六、数据字段说明
 
 ### `data/site.json`
 
@@ -390,7 +528,7 @@ git add . && git commit -m "add mytool" && git push
 
 ---
 
-## 六、常见问题
+## 七、常见问题
 
 **Q：推送到 GitHub 后页面没更新？**
 A：GitHub Pages 有缓存（一般 1～10 分钟）；另外确认 Actions 跑成功了，或者（方式 B）你本地确实执行过 `npm run build`。也可以在页脚查看构建日期。
@@ -423,18 +561,55 @@ A：不能，搜索是「名称 / 简介 / 介绍 / 标签 / 分类 / 平台」�
 **Q：手机上检查？**
 A：`npm run dev -- --lan`，用手机打开终端里打印的局域网地址即可。
 
+**Q：后台密码是多少？忘了怎么办？**
+A：第一次运行 `npm run admin`（或双击 `Xixi后台.cmd`）时，终端里会打印一行「密码：xixi-xxxxxx」，同时也写进了 `data/admin.json`。忘了就直接打开那个文件看，或者重设：`npm run admin -- --password 新密码`。
+
+**Q：点「一键上传到 GitHub」报 `Authentication failed` / `Permission denied`？**
+A：这是 git 本身的登录问题，不是后台的问题。先在项目目录里手动执行一次 `git push`，把 GitHub 账号密码或 Personal Access Token 填好（Windows 上一般会弹出凭据窗口），之后后台就能一键上传了。
+
+**Q：报 `Please tell me who you are`？**
+A：电脑上的 git 还没配置身份，执行一次即可：
+
+```bash
+git config --global user.name "你的名字"
+git config --global user.email "你的邮箱"
+```
+
+**Q：安装包太大，传不上去？**
+A：本地后台单个文件上限 4 GB；在线后台（传进 GitHub Releases）上限 2 GB。再大的话，先自己传到 GitHub Releases 或对象存储（Cloudflare R2、阿里云 OSS 等），然后在后台填「已有下载直链」。注意：如果要走在线后台的上传，单个附件不要超过 2 GB。
+
+**Q：在线后台安全吗？令牌会不会被人看到？**
+A：令牌只存在**你这台电脑的浏览器**（localStorage）里，只发给 `api.github.com`，不经过任何第三方服务器，也不写进仓库。别的访客打开 `/admin/` 只会看到一个「连接 GitHub」表单，没有令牌什么都做不了。另外令牌是细粒度的、只给 `resource-site` 一个仓库的 Contents 读写，泄露风险面很小；真泄露了，去 GitHub 撤销那一个令牌就行。
+
+**Q：在线后台连不上，报 404 / 说没权限？**
+A：按顺序检查三件事：① 令牌是不是 **Fine-grained** 的、**Repository access** 里显式勾了 `resource-site`（没勾就是 404）；② **Contents** 权限是不是 **Read and write**；③ 令牌有没有过期。权限改完之后重新生成一次令牌再粘。
+
+**Q：在线后台换个浏览器/换台电脑就要重连？**
+A：是的，令牌存在浏览器本地，不会跟着账号走（这是故意的）。换设备就重新粘一次令牌；也可以点「清除已保存的令牌」换一个。
+
+**Q：不想让别人看到 `/admin/` 这个页面怎么办？**
+A：在 `scripts/build.mjs` 里把 `admin` 加回 `skip` 集合（`const skip = new Set([...])`），再 `npm run build`——这样在线后台就不会被部署，本地后台照常用。
+
+**Q：`data/admin.json`（本地后台密码）会不会被传到网站上？**
+A：不会。它已经在 `.gitignore` 里，而且构建时也会被排除在 `dist/` 之外；`npm test` 里有一条专门的检查盯着这件事。如果你以前部署过旧版本，建议换一次密码（`npm run admin -- --password 新密码`）以防万一。
+
+**Q：怎么改工具自身的版本号？**
+A：改 `package.json` 里的 `version`，并在 `CHANGELOG.md` 里记一笔。后台页面（本地和在线两种都会显示）和命令行启动时显示的 `v1.2.0` 就是读的这里。注意这跟网站上「每个软件的版本号」（写在 `data/apps.json` 里）是两回事。
+
 ---
 
-## 七、安全与隐私
+## 八、安全与隐私
 
-- **没有后端**：所有功能都在浏览器里完成，不存在服务器被拿下的问题，也没有数据库、没有登录、没有用户系统。
+- **没有后端**：站点和两个后台都没有服务端进程 —— 在线后台页面直接调 GitHub API，本地后台跑在你自己电脑上。不存在服务器被拿下的问题，也没有数据库、没有用户系统。
 - **没有收集信息**：没有统计脚本、没有 Cookie 追踪、没有第三方 CDN 请求（图标全部内联 SVG）。
 - **防 XSS**：软件介绍、更新日志等所有文本在渲染前都会做 HTML 转义，只允许一个极小的 Markdown 子集；`javascript:` / `data:text/html` 之类的链接会被自动替换成 `#`。
 - **下载安全**：下载地址来自你自己的 `data/apps.json`；站外链接一律加 `rel="noopener noreferrer"`。建议给重要安装包计算 SHA256（`npm run hash`）填进 `sha256` 字段，方便用户校验。
 - **本地预览服务器**：默认只监听 `127.0.0.1`，只有显式加 `--lan` 或 `lan` 参数才会开放给局域网。
+- **本地后台**：同样只监听 `127.0.0.1`（外网访问不到），需要密码登录，改数据的请求还要带一个自定义标记头（用来挡 CSRF）；密码存在 `data/admin.json`，已在 `.gitignore` 里，而且**构建时会被挡在 `dist/` 之外**（`data/admin.json` 绝不会跟着网站发出去），`robots.txt` 也屏蔽了 `/admin/`。
+- **在线后台**（`/admin/`，公网可见）：它只是一个静态页面，本身没有服务器、不存密码、也没有任何后端接口。能不能改你的仓库，完全取决于那台浏览器里有没有粘过 GitHub 令牌；令牌只存在浏览器本地、只发给 `api.github.com`，别人打开这个页面只会看到一个「连接 GitHub」表单。不想让它公开，可以按上面的说明把 `admin` 加回 `scripts/build.mjs` 的 skip 列表（那样只剩本地后台）。
 
 ---
 
-## 八、许可
+## 九、许可
 
 站点代码你可以自由修改、商用、二次分发。`data/apps.json` 里收录的软件版权归各自作者所有，请遵守对应软件的授权协议。

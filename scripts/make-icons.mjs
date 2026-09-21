@@ -301,7 +301,7 @@ export function renderCoverCanvas(width, height, site, colors) {
   const textX = width * 0.33;
   const maxWidth = width - textX - width * 0.06; // 右侧留 6% 边距
   // 站名
-  const name = String(site.name || 'DevShelf');
+  const name = String(site.name || 'Xixi');
   const ascii = /^[\x20-\x7e]+$/.test(name);
   const nameScale = Math.max(5, Math.min(Math.floor(height * 0.05), Math.floor(maxWidth / (Math.max(name.length, 1) * 6))));
   if (ascii) {

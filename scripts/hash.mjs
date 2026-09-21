@@ -6,36 +6,14 @@
      npm run hash -- downloads/app.exe    计算大小 + SHA256，并给出可粘贴的 JSON
    ========================================================================== */
 
-import { createHash } from 'node:crypto';
-import { createReadStream } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { humanSize, sha256 } from './files.mjs';
+
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DOWNLOADS = join(ROOT, 'downloads');
-
-export function humanSize(bytes) {
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  return `${value >= 10 || unit === 0 ? Math.round(value) : value.toFixed(1)} ${units[unit]}`;
-}
-
-async function sha256(path) {
-  const hash = createHash('sha256');
-  await new Promise((resolvePromise, rejectPromise) => {
-    createReadStream(path)
-      .on('data', (chunk) => hash.update(chunk))
-      .on('end', resolvePromise)
-      .on('error', rejectPromise);
-  });
-  return hash.digest('hex');
-}
 
 const files = process.argv.slice(2).filter((arg) => !arg.startsWith('-'));
 

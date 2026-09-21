@@ -144,6 +144,12 @@ export function createDom({ pathname = '/index.html', search = '', protocol = 'h
 
   const window = {
     SITE_DATA: undefined,
+    document,
+    localStorage,
+    // 浏览器里 window.btoa / window.atob 是全局的，替身也得有，
+    // 否则 js/admin-github.js 这类脚本拿不到（Node 自己的 btoa 不在 window 上）
+    btoa: (text) => Buffer.from(String(text), 'binary').toString('base64'),
+    atob: (text) => Buffer.from(String(text), 'base64').toString('binary'),
     location,
     history: { replaceState() {}, pushState() {} },
     matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
@@ -173,11 +179,33 @@ export function createDom({ pathname = '/index.html', search = '', protocol = 'h
     throw new Error('测试环境不支持 fetch（本站应优先使用 data/apps.generated.js）');
   };
 
-  return { document, window, localStorage, navigator, location, IntersectionObserver, fetch, documentElement };
+  return {
+    document,
+    window,
+    localStorage,
+    navigator,
+    location,
+    IntersectionObserver,
+    fetch,
+    // 需要时由测试塞一个假的进来（js/admin.js 上传安装包要用）
+    XMLHttpRequest: undefined,
+    documentElement,
+  };
 }
 
 /** 在替身环境里执行一段浏览器脚本（打包后的 js/*.js） */
 export async function runScript(code, dom) {
+  // fetch / XMLHttpRequest 在浏览器里是「用时才查全局」，所以这里也不能提前快照，
+  // 否则测试中途换掉 dom.fetch 就不生效了。
+  const fetchProxy = (...args) =>
+    dom.fetch ? dom.fetch(...args) : Promise.reject(new Error('测试环境没有提供 fetch'));
+  class XMLHttpRequestProxy {
+    constructor() {
+      const Impl = dom.XMLHttpRequest;
+      if (!Impl) throw new Error('测试环境没有提供 XMLHttpRequest：请在测试里给 dom.XMLHttpRequest 赋值');
+      return new Impl();
+    }
+  }
   const factory = new Function(
     'window',
     'document',
@@ -187,6 +215,7 @@ export async function runScript(code, dom) {
     'history',
     'IntersectionObserver',
     'fetch',
+    'XMLHttpRequest',
     code
   );
   factory(
@@ -197,7 +226,8 @@ export async function runScript(code, dom) {
     dom.location,
     dom.window.history,
     dom.IntersectionObserver,
-    dom.fetch
+    fetchProxy,
+    XMLHttpRequestProxy
   );
   // 让脚本内部的异步初始化（await main()）跑完
   await new Promise((resolve) => setTimeout(resolve, 0));

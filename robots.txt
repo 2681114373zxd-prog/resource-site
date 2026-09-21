@@ -1,7 +1,10 @@
-# DevShelf
+# Xixi
 User-agent: *
 Allow: /
 
-# 说明：不要屏蔽 /js/ 与 /data/ —— 搜索引擎需要用它们渲染页面（本站是纯静态站，没有后台接口）
+# 说明：不要屏蔽 /js/ 与 /data/ —— 搜索引擎需要用它们渲染页面（本站是纯静态站）
+
+# 后台页面不收录：它只是个连 GitHub API 的界面，没有令牌什么也做不了
+Disallow: /admin/
 
 Sitemap: https://2681114373.ccwu.cc/sitemap.xml

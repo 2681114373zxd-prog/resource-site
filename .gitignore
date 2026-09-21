@@ -16,6 +16,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# 本地后台的登录密码（只在你自己的电脑上，绝不提交）
+data/admin.json
+
 # 部署输出目录（每次 npm run build 都会重新生成，不需要提交）
 dist/
 
