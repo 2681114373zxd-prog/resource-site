@@ -54,55 +54,6 @@
       ]
     },
     {
-      "id": "localsend",
-      "name": "LocalSend",
-      "tagline": "跨平台局域网文件互传工具，无需数据线",
-      "description": "LocalSend 是一款开源、跨平台的文件传输工具，手机、电脑只要连在同一个 Wi-Fi 下就可以互传文件。\n\n**不需要账号、不需要联网、不经过服务器**，所有传输都在局域网内直接进行，速度取决于你的路由器。\n\n- 支持 Windows / macOS / Linux / Android / iOS\n- 自动发现同一网络中的设备，也可扫码配对\n- 传输过程加密，文件不落第三方服务器\n\n适合在手机和电脑之间传安装包、照片、文档。",
-      "icon": "",
-      "category": "工具",
-      "platforms": ["Windows", "macOS", "Linux", "Android"],
-      "tags": ["文件传输", "跨平台", "局域网", "开源"],
-      "version": "1.16.1",
-      "releaseDate": "2024-12-07",
-      "updated": "2024-12-07",
-      "size": "约 30 MB",
-      "license": "MIT",
-      "homepage": "https://localsend.org/",
-      "repo": "https://github.com/localsend/localsend",
-      "requirements": ["Windows 10 及以上（x64 / ARM64）", "macOS 11 及以上", "Android 5.0 及以上", "Linux（AppImage / deb）"],
-      "featured": true,
-      "downloads": [
-        { "name": "Windows x64", "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-windows-x86-64.exe", "size": "31 MB", "platform": "Windows", "arch": "x64", "type": "installer" },
-        { "name": "Windows ARM64", "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-windows-arm64.exe", "size": "29 MB", "platform": "Windows", "arch": "arm64", "type": "installer" },
-        { "name": "macOS Apple Silicon", "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-macos-arm64.dmg", "size": "33 MB", "platform": "macOS", "arch": "arm64", "type": "dmg" },
-        { "name": "Android ARM64", "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-android-arm64.apk", "size": "28 MB", "platform": "Android", "arch": "arm64", "type": "apk" },
-        { "name": "Linux AppImage (x64)", "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-linux-x86-64.AppImage", "size": "34 MB", "platform": "Linux", "arch": "x64", "type": "appimage" },
-        { "name": "全部平台（官方发布页）", "url": "https://github.com/localsend/localsend/releases/latest", "size": "-", "platform": "全平台", "type": "link", "note": "如果你需要的架构不在上面，请到这里手动选择" }
-      ],
-      "changelog": [
-        {
-          "version": "1.16.1",
-          "date": "2024-12-07",
-          "notes": ["修复部分 Android 设备无法接收文件的问题", "Windows 版本新增自动更新检查", "改善大文件传输进度显示"]
-        },
-        {
-          "version": "1.15.0",
-          "date": "2024-09-18",
-          "notes": ["新增扫码配对功能", "界面重构，支持深色模式"]
-        }
-      ],
-      "history": [
-        {
-          "version": "1.15.0",
-          "date": "2024-09-18",
-          "size": "30 MB",
-          "downloads": [
-            { "name": "Windows x64（旧版）", "url": "https://github.com/localsend/localsend/releases/download/v1.15.0/LocalSend-1.15.0-windows-x86-64.exe", "size": "30 MB", "platform": "Windows", "arch": "x64", "type": "installer" }
-          ]
-        }
-      ]
-    },
-    {
       "id": "umi-ocr",
       "name": "Umi-OCR",
       "tagline": "免费开源的离线批量 OCR 文字识别工具",
