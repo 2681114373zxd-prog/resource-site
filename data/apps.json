@@ -85,53 +85,6 @@
       "history": []
     },
     {
-      "id": "notepad-plus-plus",
-      "name": "Notepad++",
-      "tagline": "轻量好用的 Windows 代码与文本编辑器",
-      "description": "Notepad++ 是 Windows 上最经典的免费文本 / 代码编辑器，启动快、占用低，支持语法高亮、正则查找替换、多标签页与大量插件。\n\n下载页同时提供「安装版」和「便携版」，便携版解压后可以直接放进 U 盘使用。",
-      "icon": "",
-      "category": "Windows",
-      "platforms": ["Windows"],
-      "tags": ["编辑器", "文本", "代码", "便携版", "免费"],
-      "version": "8.7.1",
-      "releaseDate": "2025-01-18",
-      "updated": "2025-01-18",
-      "size": "5.2 MB",
-      "license": "GPL-3.0",
-      "homepage": "https://notepad-plus-plus.org/",
-      "repo": "https://github.com/notepad-plus-plus/notepad-plus-plus",
-      "requirements": ["Windows 7 / 8 / 10 / 11", "安装版需要管理员权限，便携版不需要"],
-      "featured": false,
-      "downloads": [
-        { "name": "Windows x64 安装版", "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.Installer.x64.exe", "size": "5.2 MB", "platform": "Windows", "arch": "x64", "type": "installer" },
-        { "name": "Windows ARM64 安装版", "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.Installer.arm64.exe", "size": "5.0 MB", "platform": "Windows", "arch": "arm64", "type": "installer" },
-        { "name": "Windows x64 便携版（zip）", "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.portable.x64.zip", "size": "5.6 MB", "platform": "Windows", "arch": "x64", "type": "portable", "note": "解压即用，不写注册表" },
-        { "name": "本站备份（示例：放在 downloads/ 里的本地文件）", "url": "downloads/README.md", "size": "1 KB", "platform": "Windows", "type": "file", "note": "把安装包放进 downloads/ 后，把 url 改成 downloads/你的文件名 即可" }
-      ],
-      "changelog": [
-        {
-          "version": "8.7.1",
-          "date": "2025-01-18",
-          "notes": ["修复若干崩溃问题", "更新简体中文翻译", "提升大文件打开速度"]
-        },
-        {
-          "version": "8.6.9",
-          "date": "2024-12-02",
-          "notes": ["新增 ARM64 原生安装包"]
-        }
-      ],
-      "history": [
-        {
-          "version": "8.6.9",
-          "date": "2024-12-02",
-          "size": "5.0 MB",
-          "downloads": [
-            { "name": "Windows x64（旧版）", "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.6.9/npp.8.6.9.Installer.x64.exe", "size": "5.0 MB", "platform": "Windows", "arch": "x64", "type": "installer" }
-          ]
-        }
-      ]
-    },
-    {
       "id": "obs-studio",
       "name": "OBS Studio",
       "tagline": "开源免费的录屏与直播推流软件",
