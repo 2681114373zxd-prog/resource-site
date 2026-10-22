@@ -113,7 +113,7 @@ function unknownFieldMessage(where, keys, allowed) {
 function dateIssue(where, field, value) {
   if (value === undefined || value === null || String(value).trim() === '') return '';
   if (isDateLike(value)) return '';
-  return `data/apps.json：${where} 的 ${field}「${value}」不是合法日期（可以写 2026、2026-09 或 2026-09-03）。`;
+  return `data/apps.json：${where}的 ${field}「${value}」不是合法日期（可以写 2026、2026-09 或 2026-09-03）。`;
 }
 
 /**
