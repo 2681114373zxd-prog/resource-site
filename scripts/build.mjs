@@ -27,6 +27,61 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIST = join(ROOT, 'dist');
 
 /* --------------------------------------------------------------------------
+   发布清单（白名单）
+   --------------------------------------------------------------------------
+   dist/ 是要原样发布到公网的，所以默认策略必须是「不发布」，而不是
+   「除黑名单以外全发布」：黑名单只认得你已经想到的东西，哪天根目录多出
+   .env / 备份文件 / 临时脚本，就会被静默复制上线。
+
+     PUBLISH_ENTRIES —— 允许进 dist/ 的根级条目（站点实际引用到的资源）
+     DEV_ONLY_ENTRIES —— 明确的版本控制 / 开发工具条目，不进 dist 也不算异常
+     两者都不在 → 构建报错（fail-closed），强制你为新文件做一次「发不发布」的决定
+   -------------------------------------------------------------------------- */
+const PUBLISH_ENTRIES = new Set([
+  '.nojekyll', // GitHub Pages 用：关掉 Jekyll，否则 _ 开头的文件会被忽略
+  '404.html',
+  'admin', // 在线后台页面（跟着网站一起部署，用 GitHub 令牌调 API）
+  'apps', // 每个软件的静态详情页 apps/<id>/index.html + 通用 apps/app.html
+  'assets', // 样式、图标、favicon
+  'data', // site.json / categories.json / apps.json / apps.generated.js（页面要用）
+  'downloads', // 站内下载文件（apps.json 里以 downloads/ 开头的地址）
+  'feed.xml',
+  'index.html',
+  'js', // 页面脚本（含 bundle 出来的 home.js / app.js / admin 系列）
+  'robots.txt',
+  'sitemap.xml',
+]);
+
+const DEV_ONLY_ENTRIES = new Set([
+  '.git',
+  '.github', // CI 配置
+  '.gitattributes',
+  '.gitignore',
+  '.wrangler', // Cloudflare 本地缓存
+  '.cache',
+  '.shots',
+  'node_modules',
+  'dist', // 输出目录自身
+  'scripts', // 构建 / 发布工具，公网上用不到
+  'README.md',
+  'CHANGELOG.md',
+  'package.json', // 只是 npm scripts 的说明，站点不引用
+  // Windows 本地开发工具
+  'Xixi后台.cmd',
+  '发布软件.cmd',
+  '启动预览.cmd',
+  // 系统 / 临时文件
+  '.DS_Store',
+  'Thumbs.db',
+  '_measure.html',
+  '_probe.html',
+]);
+
+/* dist/ 内部还要单独排除的路径：data/admin.json 是本地后台的明文密码
+   （本地服务器会拦，静态托管可不会） */
+const skipPaths = new Set(['data/admin.json']);
+
+/* --------------------------------------------------------------------------
    小工具
    -------------------------------------------------------------------------- */
 const log = (...args) => console.log(...args);
@@ -162,7 +217,10 @@ window.SITE_DATA = ${jsonForScript(bundle)};
     SITE_EMAIL_HREF: site.email ? `mailto:${site.email}` : '#',
     SITE_NOTE: site.footerNote || '',
     OG_IMAGE: ogImage,
-    YEAR: String(new Date().getFullYear()),
+    // 年份也从 buildDate 派生（UTC）：
+    // 直接取 new Date().getFullYear() 的话，跨年那天全站页脚的年份会集体变一次，
+    // 产生一堆和内容无关的 diff；而幂等测试在当天是跑不出来的。
+    YEAR: String(new Date(`${buildDate}T00:00:00Z`).getUTCFullYear()),
     BUILD_DATE: buildDate,
   };
 
@@ -352,19 +410,37 @@ ${feedItems
   }
 
   // 6. 复制到 dist/ --------------------------------------------------------
+  // 先按白名单核对根目录：出现既不在发布清单、也不在开发工具清单里的条目就报错，
+  // 在动 dist/ 之前就停下（不会留下一个「缺东西」的半成品目录）。
+  const rootEntries = await readdir(ROOT, { withFileTypes: true });
+  const unknownEntries = rootEntries
+    .map((entry) => entry.name)
+    .filter((name) => !PUBLISH_ENTRIES.has(name) && !DEV_ONLY_ENTRIES.has(name));
+  if (unknownEntries.length) {
+    console.error(`\n\u2717 仓库根目录新增了 ${unknownEntries.length} 个文件/目录，不知道要不要发布：`);
+    unknownEntries.forEach((name) => console.error(`    · ${name}`));
+    console.error('\n  dist/ 会原样发布到公网，所以这里不做默认决定：');
+    console.error('    要发布  → 加到 scripts/build.mjs 的 PUBLISH_ENTRIES');
+    console.error('    不发布  → 加到 DEV_ONLY_ENTRIES（开发工具 / 本地文件）');
+    console.error('    顺手删掉 → 直接删了这个文件\n');
+    process.exitCode = 1;
+    return;
+  }
+
   await rm(DIST, { recursive: true, force: true });
   await mkdir(DIST, { recursive: true });
-  // dist/ 会原样发布到公网，所以下面这些东西绝不能进去：
-  //   · data/admin.json —— 本地后台的明文密码（本地服务器会拦，静态托管可不会）
-  //   · .wrangler/ —— wrangler 的本地缓存
-  //   · scripts/ —— 构建 / 发布工具，公网上用不到
-  //   · .git / .github / node_modules / dist 自身
-  // admin/ 现在要进 dist/：A 方案下它跟着网站一起部署，用 GitHub 令牌直接调 API，
-  // 不需要本机跑 Node 服务（见 README 的「在线后台」一节）。
-  const skip = new Set(['.git', '.github', '.wrangler', 'node_modules', 'dist', 'scripts']);
-  const skipPaths = new Set(['data/admin.json']);
-  await copyTree(ROOT, DIST, skip, skipPaths);
-  ok('dist/（可直接作为部署输出目录）');
+  for (const entry of rootEntries) {
+    if (!PUBLISH_ENTRIES.has(entry.name)) continue;
+    const src = join(ROOT, entry.name);
+    const dest = join(DIST, entry.name);
+    if (entry.isDirectory()) {
+      await mkdir(dest, { recursive: true });
+      await copyTree(src, dest, entry.name);
+    } else {
+      await copyFile(src, dest);
+    }
+  }
+  ok(`dist/（白名单 ${PUBLISH_ENTRIES.size} 个根级条目，可直接作为部署输出目录）`);
 
   const seconds = ((Date.now() - started) / 1000).toFixed(2);
   log(`\n\u2713 构建完成：${visibleApps.length} 个软件，用时 ${seconds}s`);
@@ -372,20 +448,19 @@ ${feedItems
 }
 
 /**
- * 递归复制。
- *   skip      —— 按「名字」跳过（任何一层目录里叫这个名字的都不复制）
- *   skipPaths —— 按「相对根目录的路径」跳过，用于 data/admin.json 这种同名的文件
+ * 递归复制一个目录（只用于白名单命中的根级目录）。
+ *   rel —— 相对仓库根目录的路径，用来查 skipPaths（例如 data/admin.json）
  */
-async function copyTree(from, to, skip, skipPaths = new Set(), rel = '') {
+async function copyTree(from, to, rel = '') {
   const entries = await readdir(from, { withFileTypes: true });
   for (const entry of entries) {
     const relPath = rel ? `${rel}/${entry.name}` : entry.name;
-    if (skip.has(entry.name) || skipPaths.has(relPath)) continue;
+    if (skipPaths.has(relPath)) continue;
     const src = join(from, entry.name);
     const dest = join(to, entry.name);
     if (entry.isDirectory()) {
       await mkdir(dest, { recursive: true });
-      await copyTree(src, dest, skip, skipPaths, relPath);
+      await copyTree(src, dest, relPath);
     } else {
       await copyFile(src, dest);
     }
