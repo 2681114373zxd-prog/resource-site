@@ -33,27 +33,32 @@ const log = (...args) => console.log(...args);
 const ok = (msg) => console.log(`  \u2713 ${msg}`);
 const warn = (msg) => console.log(`  ! ${msg}`);
 
-function pad(n) {
-  return String(n).padStart(2, '0');
-}
-function today() {
-  const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+/**
+ * 构建时间戳。
+ * 默认不写「现在几点」：那样每次构建都会产生一堆只改了时间戳的 diff，
+ * 你本地跑一次、CI 再跑一次就永远对不上。
+ *   · 设了 SOURCE_DATE_EPOCH（可复现构建的通用约定）→ 用它
+ *   · 否则用「数据里最新的 updated」，产物只随数据变化而变化
+ */
+function sourceDateEpoch() {
+  const raw = Number(process.env.SOURCE_DATE_EPOCH);
+  return Number.isFinite(raw) && raw > 0 ? new Date(raw * 1000) : null;
 }
 function rfc822(iso) {
-  const date = iso ? new Date(`${String(iso).slice(0, 10)}T00:00:00Z`) : new Date();
-  return Number.isNaN(date.getTime()) ? new Date().toUTCString() : date.toUTCString();
+  const date = iso ? new Date(`${String(iso).slice(0, 10)}T00:00:00Z`) : new Date(0);
+  return Number.isNaN(date.getTime()) ? new Date(0).toUTCString() : date.toUTCString();
 }
-/** 放进 <script> 里的 JSON：把 < 转义掉，避免出现 </script> */
+/** 放进 <script> 里的 JSON：把 < 转义掉，避免出现 </script>（也接受已经序列化好的字符串） */
 function jsonForScript(value) {
-  return JSON.stringify(value, null, 2).replace(/</g, '\\u003c');
+  const json = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  return json.replace(/</g, '\\u003c');
 }
 function renderTemplate(template, vars) {
   return template.replace(/\{\{([A-Z0-9_]+)\}\}/g, (match, key) => (key in vars ? String(vars[key]) : match));
 }
 /** 在生成的 HTML 顶部加一行说明：这个文件是自动生成的，别手改 */
-function withGeneratedHeader(html, label) {
-  const note = `<!-- 由 scripts/build.mjs 自动生成（${label}，${new Date().toISOString()}）。请修改 data/apps.json 后重新运行 npm run build。 -->`;
+function withGeneratedHeader(html, label, stamp) {
+  const note = `<!-- 由 scripts/build.mjs 自动生成（${label}，数据更新于 ${stamp}）。请修改 data/apps.json 后重新运行 npm run build。 -->`;
   return `${html.replace('<!doctype html>', `<!doctype html>\n${note}`).trim()}\n`;
 }
 /**
@@ -114,12 +119,16 @@ async function build() {
     return;
   }
 
-  const buildDate = today();
   const visibleApps = apps.filter((app) => !app.hidden);
+  // 构建日期同样不取「今天」：默认用数据里最新的 updated，保证同样的数据两次构建完全一致
+  const epoch = sourceDateEpoch();
+  const latestIso = latestUpdate(visibleApps);
+  const buildDate = epoch ? epoch.toISOString().slice(0, 10) : String(latestIso || '').slice(0, 10) || '1970-01-01';
+  const generatedAt = epoch ? epoch.toISOString() : latestIso ? `${String(latestIso).slice(0, 10)}T00:00:00.000Z` : '';
 
   // 2. data/apps.generated.js ---------------------------------------------
   const bundle = {
-    generatedAt: new Date().toISOString(),
+    generatedAt,
     site,
     categories,
     apps: visibleApps,
@@ -181,10 +190,13 @@ window.SITE_DATA = ${jsonForScript(bundle)};
       SEO_TITLE: title,
       SEO_DESCRIPTION: description,
       SEO_CANONICAL: canonical,
-      JSONLD: jsonLd(app, site),
+      JSONLD: jsonForScript(jsonLd(app, site)),
       CONTENT: detailContentHtml(app, { root: '../../', site, categories, apps: visibleApps, platform: '' }),
     });
-    await write(join(ROOT, 'apps', app.id, 'index.html'), withGeneratedHeader(html, `apps/${app.id}/ · ${app.name}`));
+    await write(
+      join(ROOT, 'apps', app.id, 'index.html'),
+      withGeneratedHeader(html, `apps/${app.id}/ · ${app.name}`, buildDate)
+    );
   }
   ok(`apps/<id>/index.html（${visibleApps.length} 个详情页）`);
 
@@ -201,7 +213,7 @@ window.SITE_DATA = ${jsonForScript(bundle)};
     JSONLD: jsonForScript({ '@context': 'https://schema.org', '@type': 'WebPage', name: '软件详情' }),
     CONTENT: `<div class="alert" style="margin:24px 0">正在加载软件信息…如果你的浏览器禁用了 JavaScript，请从<a href="../index.html">首页</a>进入对应的软件页面。</div>`,
   }).replace('<meta name="app-id"', '<meta name="robots" content="noindex">\n  <meta name="app-id"');
-  await write(join(ROOT, 'apps', 'app.html'), withGeneratedHeader(generic, 'apps/app.html · 通用详情页'));
+  await write(join(ROOT, 'apps', 'app.html'), withGeneratedHeader(generic, 'apps/app.html · 通用详情页', buildDate));
 
   // 4. sitemap / robots / feed --------------------------------------------
   const urls = [
@@ -264,7 +276,7 @@ Sitemap: ${absolute(site, 'sitemap.xml')}
     <link>${absolute(site, '')}</link>
     <description>${site.description || ''}</description>
     <language>zh-CN</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <lastBuildDate>${rfc822(epoch ? epoch.toISOString() : latestIso)}</lastBuildDate>
     <atom:link href="${absolute(site, 'feed.xml')}" rel="self" type="application/rss+xml"/>
 ${feedItems
   .map(
@@ -298,7 +310,6 @@ ${feedItems
   <meta property="og:url" content="${absolute(site, '')}">
   <meta property="og:image" content="${ogImage}">
   <meta name="twitter:card" content="summary_large_image">`;
-  const latestIso = latestUpdate(visibleApps);
   const statsBlock = [
     `<span><b data-stat="apps">${visibleApps.length}</b> 个软件</span>`,
     `<span><b data-stat="packages">${countPackages(visibleApps)}</b> 个安装包</span>`,
@@ -330,7 +341,15 @@ ${feedItems
   });
   await write(indexPath, `${indexHtml.trimEnd()}\n`);
   ok('index.html（SEO、统计、软件列表已预渲染）');
-  if (missing.length) warn(`index.html 里没有找到这些标记：${missing.join(', ')}（已跳过）`);
+  if (missing.length) {
+    // 标记没了 = 首页的软件列表永远不会被填进去 = 部署一个空站，
+    // 所以这里必须让 CI 变红，而不是打一行提醒就继续上传产物。
+    console.error(`\n\u2717 index.html 里没有找到这些标记：${missing.join(', ')}`);
+    console.error('  首页的 <!-- APPS:START --> … <!-- APPS:END --> 这类标记被删掉或改名了，');
+    console.error('  页面不会被填进软件列表，部署上去就是空站。请恢复标记后重新构建。\n');
+    process.exitCode = 1;
+    return;
+  }
 
   // 6. 复制到 dist/ --------------------------------------------------------
   await rm(DIST, { recursive: true, force: true });

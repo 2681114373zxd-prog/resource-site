@@ -70,7 +70,7 @@ export function buildBundleCode(parts, expose = null) {
   window.${expose.global} = { ${unique.join(', ')} };
 `
       : '';
-  return `/* 由 scripts/bundle.mjs 自动生成，请不要直接修改这个文件。
+  const code = `/* 由 scripts/bundle.mjs 自动生成，请不要直接修改这个文件。
    源码在 js/ 目录下（shared.js → render.js → core.js → 页面脚本），改完源码后运行 npm run build 会重新生成。 */
 (function () {
   'use strict';
@@ -78,6 +78,9 @@ export function buildBundleCode(parts, expose = null) {
 ${parts.join('\n\n')}
 ${tail}})();
 `;
+  // 换行归一：源码在 Windows 上签出时是 CRLF（core.autocrlf=true），
+  // 生成物必须永远是纯 LF，否则 test.mjs 在「产物 vs 源码重新打包」的比对里会永远失败。
+  return code.replace(/\r\n/g, '\n');
 }
 
 /** 打包所有入口，写入 js/*.js */
