@@ -1948,6 +1948,66 @@ await test('防线 13／首页年份要和详情页一致、由数据派生，�
   }
 });
 
+await test('防线 14／首页「构建于」必须由构建注入，不能留给访客浏览器填今天', async () => {
+  // 首页页脚的 data-build-date 以前是个空 span，由 js/app.js / js/app-page.js 在访客
+  // 浏览器里用 new Date() 填成「今天」—— 于是这个本该说明「线上是不是最新」的字段
+  // 永远等于打开页面的那天，跟实际构建时间无关，还和详情页（构建时注入）对不上。
+  //
+  // 同样要两条：
+  //   ① 源码保留标记块 —— 删了标记构建就压根不替换，只查产物看不出来；
+  //   ② 产物里这个 span 非空且等于构建日 —— 空意味着运行时兜底会接管，又变回墙钟。
+  //      SDE 取 2023 是为了让「构建注入」和「访客今天（2026）」彻底分开，
+  //      否则拿到 2026 时分不清是注入成功还是恰好等于今年。
+  const source = await readSource('index.html');
+  assert.match(
+    source,
+    /<!--\s*BUILD_DATE:START\s*-->[\s\S]*<!--\s*BUILD_DATE:END\s*-->/,
+    'index.html 里必须保留 <!-- BUILD_DATE:START --> … <!-- BUILD_DATE:END --> 替换块'
+  );
+
+  requireData();
+  const dir = await mkdtemp(join(tmpdir(), 'xixi-home-builddate-'));
+  try {
+    await copyTree(ROOT, dir, new Set(['.git', 'dist', 'node_modules', '.wrangler', '.cache', '.shots']));
+
+    // index.html 是「构建自写回」的，标记块里留着上一次构建的日期。所以不能直接断言
+    // 「产物 == 构建日」：万一残留值恰好等于期望值，注入被删掉也会假绿（值没被改写但看不出来）。
+    // 先往副本里塞一个绝不会出现的哨兵：构建只要真的在注入，哨兵必然被改写。
+    const idxPath = join(dir, 'index.html');
+    const seeded = (await readFile(idxPath, 'utf8')).replace(
+      /(<!--\s*BUILD_DATE:START\s*-->)[\s\S]*?(<!--\s*BUILD_DATE:END\s*-->)/,
+      '$11999-01-01$2'
+    );
+    assert.notEqual(seeded, await readFile(idxPath, 'utf8'), '哨兵没能写进副本，断言失去意义');
+    await writeFile(idxPath, seeded);
+
+    const env = { SOURCE_DATE_EPOCH: '1704052800', TZ: 'Asia/Shanghai' };
+    const result = await runNode(join(dir, 'scripts', 'build.mjs'), dir, env);
+    assert.equal(result.code, 0, `构建失败：${result.stderr || result.stdout}`);
+
+    const html = await readFile(join(dir, 'dist', 'index.html'), 'utf8');
+    const match = /data-build-date>([\s\S]*?)<\/span>/.exec(html);
+    assert.ok(match, 'dist/index.html 里找不到 data-build-date');
+    const shown = match[1].replace(/<!--[\s\S]*?-->/g, '').trim();
+    // 哨兵还在 = 这一轮根本没注入，是上一次构建的残留或运行时兜底，两种都是墙钟。
+    assert.notEqual(shown, '', '首页「构建于」是空的 —— 运行时会用访客本机 new Date() 填上今天');
+    assert.notEqual(shown, '1999-01-01', '首页「构建于」没被构建改写，仍是哨兵值');
+    assert.equal(shown, '2023-12-31', `首页「构建于」应为构建日 2023-12-31，实际「${shown}」`);
+
+    // 首页和详情页必须说同一件事，否则「构建于」在这两个页面上含义不同。
+    const detail = await readFile(join(dir, 'dist', 'apps', primaryId, 'index.html'), 'utf8');
+    const detailMatch = /data-build-date>([\s\S]*?)<\/span>/.exec(detail);
+    assert.ok(detailMatch, `dist/apps/${primaryId}/index.html 里找不到 data-build-date`);
+    assert.equal(
+      detailMatch[1].replace(/<!--[\s\S]*?-->/g, '').trim(),
+      shown,
+      `首页(${shown})与详情页的「构建于」必须一致`
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 /* ---------------- 汇总 ---------------- */
 console.log(`\n${failed ? '\u2717' : '\u2713'} 通过 ${passed} 项${failed ? `，失败 ${failed} 项` : '，全部通过'}\n`);
 if (failed) process.exitCode = 1;

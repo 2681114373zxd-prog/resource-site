@@ -407,6 +407,11 @@ ${feedItems
     // 首页页脚的年份：以前写死 2026，且 js/core.js 运行时会用 new Date() 覆盖，
     // 导致首页与详情页年份不一致（详情页是构建时注入的）。现在两边都从 buildDate 派生。
     ['YEAR', commonVars.YEAR],
+    // 首页页脚的「构建于」：以前是空 span，由 js/app.js / js/app-page.js 在访客浏览器里
+    // 用 new Date() 填上「今天」，于是这个本该说明「线上是不是最新」的字段永远等于打开
+    // 页面的那天，跟实际构建时间无关。现在改为构建时注入，与详情页一致；运行时那段
+    // 只在内容为空时才兜底，注入非空后它自然不会触发。
+    ['BUILD_DATE', commonVars.BUILD_DATE],
     ['SEO', seoBlock],
     ['STATS', statsBlock],
     ['RESULT', resultBlock],
