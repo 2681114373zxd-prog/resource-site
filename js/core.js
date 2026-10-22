@@ -133,7 +133,8 @@ export function initSiteChrome(site = {}) {
   setText('description', site.description);
   setText('author', site.author);
   setText('note', site.footerNote);
-  setText('year', String(new Date().getFullYear()));
+  // 页脚年份不在这里覆盖：它是构建时按 buildDate 注入的静态文本，
+  // 运行时再写 new Date() 的话，首页会和详情页对不上，也会让产物随机器时间变化。
   setLink('github', site.github);
   setLink('email', site.email ? `mailto:${site.email}` : '');
   // 注意：Logo 图片路径由每个页面自己写死（详情页在子目录里，前缀不同），

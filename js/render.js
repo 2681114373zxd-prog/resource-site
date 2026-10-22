@@ -116,8 +116,12 @@ function platformsTextShort(app) {
   return `${list.slice(0, 2).join(' · ')} +${list.length - 2}`;
 }
 
-function updatedText(app) {
-  return relativeDate(app.updated || app.releaseDate);
+/**
+ * 「多久以前」的文案。ctx.now 是参考时间：构建时由 build.mjs 注入固定值，
+ * 这样同一份数据在不同时间构建出的 HTML 完全一致；浏览器里不传，走真实时钟。
+ */
+function updatedText(app, ctx = {}) {
+  return relativeDate(app.updated || app.releaseDate, ctx.now);
 }
 
 function detailHref(app, root) {
@@ -180,7 +184,7 @@ export function cardHtml(app, ctx = {}) {
     }
     <span class="badge" title="更新时间：${escapeHtml(formatDate(app.updated || app.releaseDate, 'iso'))}">${icon(
       'clock'
-    )} ${escapeHtml(updatedText(app))}</span>
+    )} ${escapeHtml(updatedText(app, ctx))}</span>
     ${app.category ? `<span class="tag">${escapeHtml(app.category)}</span>` : ''}
     ${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
   </div>
@@ -295,10 +299,11 @@ export function historyHtml(app, ctx = {}) {
 function specHtml(app, ctx = {}) {
   const { site = {} } = ctx;
   const updated = app.updated || app.releaseDate;
+  const relative = updated ? relativeDate(updated, ctx.now) : '';
   const updatedLabel = updated
-    ? relativeDate(updated) === formatDate(updated)
+    ? relative === formatDate(updated)
       ? formatDate(updated)
-      : `${formatDate(updated)}（${relativeDate(updated)}）`
+      : `${formatDate(updated)}（${relative}）`
     : '—';
   const rows = [
     ['当前版本', app.version ? `v${app.version}` : '—'],
@@ -389,7 +394,7 @@ export function detailContentHtml(app, ctx = {}) {
           <span class="badge badge-accent">v${escapeHtml(app.version || '—')}</span>
           ${app.size ? `<span class="badge">${escapeHtml(app.size)}</span>` : ''}
           ${platformsText(app) ? `<span class="badge">${escapeHtml(platformsText(app))}</span>` : ''}
-          <span class="badge">${icon('clock')} ${escapeHtml(updatedText(app))}更新</span>
+          <span class="badge">${icon('clock')} ${escapeHtml(updatedText(app, ctx))}更新</span>
           ${app.license ? `<span class="badge">${escapeHtml(app.license)}</span>` : ''}
         </div>
       </div>

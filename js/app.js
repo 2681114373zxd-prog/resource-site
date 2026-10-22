@@ -39,12 +39,15 @@ function formatDate(iso, style = 'zh') {
   return style === 'iso' ? `${y}-${pad(m)}-${pad(day)}` : `${y}年${m}月${day}日`;
 }
 
-/** 相对时间：刚刚 / 3 天前 / 2024年5月1日 */
-function relativeDate(iso) {
+/**
+ * 相对时间：刚刚 / 3 天前 / 2024年5月1日
+ * now 可以注入：构建时传固定值，产物才不会因为「今天是几号」而变（可复现构建）。
+ */
+function relativeDate(iso, now = Date.now()) {
   if (!iso) return '—';
   const then = new Date(`${String(iso).slice(0, 10)}T00:00:00`).getTime();
   if (Number.isNaN(then)) return String(iso);
-  const days = Math.floor((Date.now() - then) / 86400000);
+  const days = Math.floor((now - then) / 86400000);
   if (days < 0) return formatDate(iso);
   if (days === 0) return '今天';
   if (days === 1) return '昨天';
@@ -420,8 +423,12 @@ function platformsTextShort(app) {
   return `${list.slice(0, 2).join(' · ')} +${list.length - 2}`;
 }
 
-function updatedText(app) {
-  return relativeDate(app.updated || app.releaseDate);
+/**
+ * 「多久以前」的文案。ctx.now 是参考时间：构建时由 build.mjs 注入固定值，
+ * 这样同一份数据在不同时间构建出的 HTML 完全一致；浏览器里不传，走真实时钟。
+ */
+function updatedText(app, ctx = {}) {
+  return relativeDate(app.updated || app.releaseDate, ctx.now);
 }
 
 function detailHref(app, root) {
@@ -484,7 +491,7 @@ function cardHtml(app, ctx = {}) {
     }
     <span class="badge" title="更新时间：${escapeHtml(formatDate(app.updated || app.releaseDate, 'iso'))}">${icon(
       'clock'
-    )} ${escapeHtml(updatedText(app))}</span>
+    )} ${escapeHtml(updatedText(app, ctx))}</span>
     ${app.category ? `<span class="tag">${escapeHtml(app.category)}</span>` : ''}
     ${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
   </div>
@@ -599,10 +606,11 @@ function historyHtml(app, ctx = {}) {
 function specHtml(app, ctx = {}) {
   const { site = {} } = ctx;
   const updated = app.updated || app.releaseDate;
+  const relative = updated ? relativeDate(updated, ctx.now) : '';
   const updatedLabel = updated
-    ? relativeDate(updated) === formatDate(updated)
+    ? relative === formatDate(updated)
       ? formatDate(updated)
-      : `${formatDate(updated)}（${relativeDate(updated)}）`
+      : `${formatDate(updated)}（${relative}）`
     : '—';
   const rows = [
     ['当前版本', app.version ? `v${app.version}` : '—'],
@@ -693,7 +701,7 @@ function detailContentHtml(app, ctx = {}) {
           <span class="badge badge-accent">v${escapeHtml(app.version || '—')}</span>
           ${app.size ? `<span class="badge">${escapeHtml(app.size)}</span>` : ''}
           ${platformsText(app) ? `<span class="badge">${escapeHtml(platformsText(app))}</span>` : ''}
-          <span class="badge">${icon('clock')} ${escapeHtml(updatedText(app))}更新</span>
+          <span class="badge">${icon('clock')} ${escapeHtml(updatedText(app, ctx))}更新</span>
           ${app.license ? `<span class="badge">${escapeHtml(app.license)}</span>` : ''}
         </div>
       </div>
@@ -913,7 +921,8 @@ function initSiteChrome(site = {}) {
   setText('description', site.description);
   setText('author', site.author);
   setText('note', site.footerNote);
-  setText('year', String(new Date().getFullYear()));
+  // 页脚年份不在这里覆盖：它是构建时按 buildDate 注入的静态文本，
+  // 运行时再写 new Date() 的话，首页会和详情页对不上，也会让产物随机器时间变化。
   setLink('github', site.github);
   setLink('email', site.email ? `mailto:${site.email}` : '');
   // 注意：Logo 图片路径由每个页面自己写死（详情页在子目录里，前缀不同），

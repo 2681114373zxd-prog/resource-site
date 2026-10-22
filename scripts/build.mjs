@@ -180,6 +180,11 @@ async function build() {
   const latestIso = latestUpdate(visibleApps);
   const buildDate = epoch ? epoch.toISOString().slice(0, 10) : String(latestIso || '').slice(0, 10) || '1970-01-01';
   const generatedAt = epoch ? epoch.toISOString() : latestIso ? `${String(latestIso).slice(0, 10)}T00:00:00.000Z` : '';
+  // buildDate 管「日期标签」（lastmod / generatedAt / 头注释），buildNow 管「多久以前」。
+  // 两者不能混：buildDate 在没有 SOURCE_DATE_EPOCH 时就等于数据最新更新日，
+  // 拿它算「最近更新」永远是 0 天、永远显示「今天」。
+  // 有 SDE 时用 SDE（产物可复现），没有时退回当前时刻（本地构建的正常表现）。
+  const buildNow = epoch ?? new Date();
 
   // 2. data/apps.generated.js ---------------------------------------------
   const bundle = {
@@ -255,7 +260,14 @@ window.SITE_DATA = ${jsonForScript(bundle)};
       SEO_DESCRIPTION: description,
       SEO_CANONICAL: canonical,
       JSONLD: jsonForScript(jsonLd(app, site)),
-      CONTENT: detailContentHtml(app, { root: '../../', site, categories, apps: visibleApps, platform: '' }),
+      CONTENT: detailContentHtml(app, {
+        root: '../../',
+        site,
+        categories,
+        apps: visibleApps,
+        platform: '',
+        now: buildNow,
+      }),
     });
     await write(
       join(ROOT, 'apps', app.id, 'index.html'),
@@ -379,10 +391,10 @@ ${feedItems
     `<span><b data-stat="packages">${countPackages(visibleApps)}</b> 个安装包</span>`,
     `<span>最近更新 <b data-stat="updated" data-stat-updated-date${
       latestIso ? ` title="最近更新：${formatDate(latestIso, 'iso')}"` : ''
-    }>${latestIso ? relativeDate(latestIso) : '—'}</b></span>`,
+    }>${latestIso ? relativeDate(latestIso, buildNow) : '—'}</b></span>`,
   ].join('\n        ');
   const listBlock = sortApps(visibleApps, 'default')
-    .map((app) => cardHtml(app, { root: '' }))
+    .map((app) => cardHtml(app, { root: '', now: buildNow }))
     .join('\n')
     .split('\n')
     .map((line) => `      ${line}`)
@@ -392,6 +404,9 @@ ${feedItems
   )}</b> 个安装包</span><span class="muted">选择分类或搜索可以快速筛选</span>`;
 
   const blocks = [
+    // 首页页脚的年份：以前写死 2026，且 js/core.js 运行时会用 new Date() 覆盖，
+    // 导致首页与详情页年份不一致（详情页是构建时注入的）。现在两边都从 buildDate 派生。
+    ['YEAR', commonVars.YEAR],
     ['SEO', seoBlock],
     ['STATS', statsBlock],
     ['RESULT', resultBlock],

@@ -33,12 +33,15 @@ export function formatDate(iso, style = 'zh') {
   return style === 'iso' ? `${y}-${pad(m)}-${pad(day)}` : `${y}年${m}月${day}日`;
 }
 
-/** 相对时间：刚刚 / 3 天前 / 2024年5月1日 */
-export function relativeDate(iso) {
+/**
+ * 相对时间：刚刚 / 3 天前 / 2024年5月1日
+ * now 可以注入：构建时传固定值，产物才不会因为「今天是几号」而变（可复现构建）。
+ */
+export function relativeDate(iso, now = Date.now()) {
   if (!iso) return '—';
   const then = new Date(`${String(iso).slice(0, 10)}T00:00:00`).getTime();
   if (Number.isNaN(then)) return String(iso);
-  const days = Math.floor((Date.now() - then) / 86400000);
+  const days = Math.floor((now - then) / 86400000);
   if (days < 0) return formatDate(iso);
   if (days === 0) return '今天';
   if (days === 1) return '昨天';
