@@ -9,7 +9,9 @@
 
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { readFile, stat } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -150,6 +152,22 @@ async function ensureDist() {
   const result = await runNode(join(ROOT, 'scripts', 'build.mjs'), ROOT);
   assert.equal(result.code, 0, `dist 不存在，尝试构建也失败了：${result.stderr || result.stdout}`);
   assert.ok(await pathExists(join(ROOT, 'dist', 'index.html')), '构建声称成功，但 dist/index.html 还是没有');
+}
+
+/** 目录下所有文件的 「路径 + 大小 + sha256」 清单，用来做字节级比较 */
+async function treeManifest(dir) {
+  const files = (await readdir(dir, { recursive: true }))
+    .map((item) => String(item).replace(/\\/g, '/'))
+    .sort();
+  const manifest = [];
+  for (const file of files) {
+    const full = join(dir, file);
+    const info = await stat(full);
+    if (!info.isFile()) continue;
+    const digest = createHash('sha256').update(await readFile(full)).digest('hex');
+    manifest.push(`${file}\t${info.size}\t${digest}`);
+  }
+  return manifest;
 }
 
 const demoApp = {
@@ -1394,6 +1412,156 @@ await test('在线后台：连上之后发布软件，安装包进 Releases、ap
     committed.apps.slice(0, originalApps.length).every((app, index) => app.id === originalApps[index].id),
     '原有软件的顺序不该被改动'
   );
+});
+
+/* ==========================================================================
+   数据契约与构建确定性防线
+   --------------------------------------------------------------------------
+   这 6 条是本次事故（数据字段被翻成中文、生成物与源数据脱节、构建不确定）
+   暴露出来、但一层测试都没守着的空白。它们全部对着「真实产物 / 真实进程」
+   断言，不依赖 dom-stub。
+   ========================================================================== */
+console.log('\n数据契约与构建确定性防线：');
+
+const FIXTURES = join(ROOT, 'scripts', 'fixtures');
+
+/**
+ * 把 check.mjs / validate.mjs / 真实 data/ 拷进一个临时目录，
+ * 用 fixture 替换其中的 apps.json，然后跑真正的 node 进程。
+ * 全程不碰仓库里的文件：用例失败、中途崩溃都不会留下脏工作区。
+ */
+async function checkWithAppsFixture(fixture) {
+  const dir = await mkdtemp(join(tmpdir(), 'xixi-check-'));
+  try {
+    await mkdir(join(dir, 'scripts'), { recursive: true });
+    await mkdir(join(dir, 'data'), { recursive: true });
+    for (const file of ['check.mjs', 'validate.mjs']) {
+      await copyFile(join(ROOT, 'scripts', file), join(dir, 'scripts', file));
+    }
+    for (const file of ['site.json', 'categories.json']) {
+      await copyFile(join(ROOT, 'data', file), join(dir, 'data', file));
+    }
+    await copyFile(join(FIXTURES, fixture), join(dir, 'data', 'apps.json'));
+    const result = await runNode(join(dir, 'scripts', 'check.mjs'), dir);
+    return { code: result.code, output: `${result.stdout}${result.stderr}` };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+await test('防线 1／app 集合一致性：data/apps.generated.js 的软件集合必须和 apps.json 一模一样', async () => {
+  requireData();
+  const text = await readSource('data/apps.generated.js');
+  const win = {};
+  new Function('window', text)(win);
+  const generated = (win.SITE_DATA && win.SITE_DATA.apps) || [];
+  assert.ok(
+    Array.isArray(generated) && generated.length > 0,
+    'data/apps.generated.js 里读不到 SITE_DATA.apps，请先 npm run build'
+  );
+
+  const generatedIds = generated.map((app) => app.id).sort();
+  const sourceIds = visibleApps.map((app) => app.id).sort();
+  const onlyInGenerated = generatedIds.filter((id) => !sourceIds.includes(id));
+  const onlyInSource = sourceIds.filter((id) => !generatedIds.includes(id));
+  assert.deepEqual(
+    { onlyInGenerated, onlyInSource },
+    { onlyInGenerated: [], onlyInSource: [] },
+    `生成物与 apps.json 不同步（生成物多出：${onlyInGenerated.join('、') || '无'}；缺少：${onlyInSource.join('、') || '无'}），请重新 npm run build`
+  );
+});
+
+await test('防线 2／中文键：apps.json 出现「名称 / 版本 / 下载」时 check.mjs 必须失败并点名', async () => {
+  const { code, output } = await checkWithAppsFixture('apps-chinese-keys.json');
+  assert.notEqual(code, 0, `中文键必须让 check.mjs 非 0 退出，实际退出码 ${code}\n${output}`);
+  assert.match(output, /未知字段/, `错误信息要说明遇到了「未知字段」：\n${output}`);
+  for (const key of ['名称', '版本', '下载']) {
+    assert.ok(output.includes(key), `错误信息里应该点名中文键「${key}」：\n${output}`);
+  }
+});
+
+const LF_ONLY_FILES = ['js/home.js', 'js/app.js', 'js/admin-lib.js', 'data/apps.generated.js'];
+
+await test('防线 3／换行符：js/home.js、js/app.js、js/admin-lib.js、data/apps.generated.js 必须是纯 LF', async () => {
+  const dirty = [];
+  for (const file of LF_ONLY_FILES) {
+    const text = await readSource(file);
+    if (!text.includes('\r')) continue;
+    const hit = text.split('\n').findIndex((line) => line.includes('\r'));
+    dirty.push(`${file}（首个 \\r 在第 ${hit + 1} 行）`);
+  }
+  assert.deepEqual(dirty, [], `这些文件里混进了 CRLF，不同系统构建会互相打架：${dirty.join('；')}`);
+});
+
+/** 递归复制目录（用于给构建造一份干净副本，绝不碰工作区） */
+async function copyTree(from, to, skip) {
+  await mkdir(to, { recursive: true });
+  for (const entry of await readdir(from, { withFileTypes: true })) {
+    if (skip.has(entry.name)) continue;
+    const src = join(from, entry.name);
+    const dest = join(to, entry.name);
+    if (entry.isDirectory()) await copyTree(src, dest, skip);
+    else await copyFile(src, dest);
+  }
+}
+
+await test('防线 4／构建幂等：在干净副本里连跑两次 build，产物必须逐字节相同', async () => {
+  // 为什么在临时副本里跑：一来不会动工作区（dist/ 反复重建、用例中途失败都不会留脏），
+  // 二来顺便验证「clone 下来直接 build」也能从零构建成功。
+  const dir = await mkdtemp(join(tmpdir(), 'xixi-build-'));
+  try {
+    const skip = new Set(['.git', 'dist', 'node_modules', '.wrangler', '.cache', '.shots']);
+    await copyTree(ROOT, dir, skip);
+
+    const first = await runNode(join(dir, 'scripts', 'build.mjs'), dir);
+    assert.equal(first.code, 0, `第一次构建就失败了：${first.stderr || first.stdout}`);
+    assert.ok(await pathExists(join(dir, 'dist', 'index.html')), '第一次构建没产出 dist/index.html');
+    const before = await treeManifest(dir);
+
+    const second = await runNode(join(dir, 'scripts', 'build.mjs'), dir);
+    assert.equal(second.code, 0, `第二次构建失败了：${second.stderr || second.stdout}`);
+    const after = await treeManifest(dir);
+
+    const toMap = (list) =>
+      new Map(
+        list.map((line) => {
+          const [file, size, hash] = line.split('\t');
+          return [file, `${size}/${hash}`];
+        })
+      );
+    const a = toMap(before);
+    const b = toMap(after);
+    const changed = [];
+    for (const [file, signature] of a) {
+      if (!b.has(file)) changed.push(`${file}：第二次构建后不见了`);
+      else if (b.get(file) !== signature) changed.push(`${file}：两次构建内容不同`);
+    }
+    for (const file of b.keys()) {
+      if (!a.has(file)) changed.push(`${file}：第二次构建才出现`);
+    }
+    assert.deepEqual(
+      changed.slice(0, 10),
+      [],
+      `两次构建的产物不一致（共 ${changed.length} 个文件，前 10 个）：\n        ${changed.slice(0, 10).join('\n        ')}`
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+await test('防线 5／坏数据友好报错：非法 JSON 时 check.mjs 必须非 0、点名 apps.json、不甩堆栈', async () => {
+  const { code, output } = await checkWithAppsFixture('apps-invalid.json');
+  assert.notEqual(code, 0, `非法 JSON 必须让 check.mjs 非 0 退出，实际退出码 ${code}\n${output}`);
+  assert.match(output, /apps\.json/, `错误信息里要出现文件名 apps.json：\n${output}`);
+  assert.ok(!/\n\s+at\s/.test(output), `不该把 Node 的原始调用栈甩给用户：\n${output}`);
+  const lines = output.split('\n').filter((line) => line.trim());
+  assert.ok(lines.length <= 4, `报错应该收敛成几行中文，实际 ${lines.length} 行：\n${output}`);
+});
+
+await test('防线 6／空站：apps.json 一条软件都没有时 check.mjs 必须失败', async () => {
+  const { code, output } = await checkWithAppsFixture('apps-empty.json');
+  assert.notEqual(code, 0, `空数据必须让 check.mjs 非 0 退出，实际退出码 ${code}\n${output}`);
+  assert.match(output, /没有任何软件/, `错误信息要说明「没有任何软件」：\n${output}`);
 });
 
 /* ---------------- 汇总 ---------------- */
