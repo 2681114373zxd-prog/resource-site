@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 import { pipeline } from 'node:stream/promises';
 
 import { argValue, humanSize, packageFileName, parsePort, sha256, toolVersion } from './files.mjs';
-import { nextBump, pushChangelog, recordHistory, validateApp } from './app-data.mjs';
+import { mergePlatforms, nextBump, pushChangelog, recordHistory, validateApp } from './app-data.mjs';
 import { removeApp, setTopLevelValue, spliceApp } from './json-style.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -578,9 +578,13 @@ async function handleSaveApp(req, res) {
   app.updated = today;
   app.releaseDate = app.releaseDate || today;
 
-  // 平台列表根据下载项自动补齐，省得用户手填
-  const platforms = new Set([...(Array.isArray(app.platforms) ? app.platforms : []), ...app.downloads.map((item) => item.platform)].filter(Boolean));
-  app.platforms = [...platforms];
+  // 平台列表根据下载项自动补齐，省得用户手填。
+  // 走和在线后台（js/admin.js）同一个 mergePlatforms：有具体系统时丢掉「全平台」，
+  // 否则既有 "全平台" 又补一个 .exe，就会写成 ["全平台","Windows"] 的混写。
+  app.platforms = mergePlatforms([
+    ...(Array.isArray(app.platforms) ? app.platforms : []),
+    ...app.downloads.map((item) => item.platform),
+  ]);
 
   const problems = validateApp(app);
   if (problems.length) return sendJson(res, 400, { ok: false, error: problems.join(' ') });

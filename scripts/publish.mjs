@@ -37,7 +37,7 @@ import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { detectPackage, humanSize, packageFileName, sha256, slugify, toolVersion } from './files.mjs';
-import { mergeDownload, nextBump, pushChangelog, recordHistory, validateApp } from './app-data.mjs';
+import { mergeDownload, mergePlatforms, nextBump, pushChangelog, recordHistory, validateApp } from './app-data.mjs';
 import { spliceApp } from './json-style.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -272,8 +272,9 @@ async function main() {
     summary.push(
       merged.action === 'replace' ? `替换了已有的下载项「${merged.name}」` : `新增下载项「${merged.name}」`
     );
-    if (!Array.isArray(existing.platforms)) existing.platforms = [];
-    if (!existing.platforms.includes(platform)) existing.platforms.push(platform);
+    // 平台列表走和后台一致的合并逻辑：有具体系统时丢掉「全平台」通配值。
+    // 直接 push 的话，["全平台"] 补传一个 .exe 就会变成 ["全平台","Windows"] 的混写。
+    existing.platforms = mergePlatforms([...(existing.platforms || []), platform]);
     existing.version = options.bump ? nextBump(previous.version, String(options.bump)) : version;
     existing.updated = todayIso;
     existing.releaseDate = existing.releaseDate || todayIso;

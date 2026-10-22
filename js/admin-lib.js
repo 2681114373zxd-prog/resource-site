@@ -364,7 +364,9 @@ const DATE_RE = /^\d{4}(-\d{2}){0,2}$/;
 
 /** 是否是可信的日期值。"2026"、"2026-09"、"2026-09-03" 都算；"2026-02-30" 不算。 */
 function isDateLike(v) {
-  const s = String(v).slice(0, 10);
+  // 校验完整值，不要 slice：否则 "2026-09-03xyz" 截断后会被放行。
+  // DATE_RE 本身限定了长度（4 / 7 / 10 位），所以多余字符会直接被正则拒掉。
+  const s = String(v).trim();
   if (!DATE_RE.test(s)) return false;
   const d = new Date(`${s}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return false;
