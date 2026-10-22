@@ -7,6 +7,7 @@
 
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { PLATFORM_VALUES, WILDCARD_PLATFORMS } from './app-data.mjs';
 
 /** 读取 JSON（出错时给出友好提示） */
 async function readJson(path) {
@@ -80,7 +81,6 @@ const APP_FIELDS = [
 const DOWNLOAD_FIELDS = ['name', 'url', 'size', 'platform', 'arch', 'type', 'note', 'sha256'];
 const CHANGELOG_FIELDS = ['version', 'date', 'notes'];
 const HISTORY_FIELDS = ['version', 'date', 'size', 'notes', 'downloads'];
-const PLATFORM_NAMES = ['Windows', 'macOS', 'Linux', 'Android'];
 
 /** 找出不在白名单里的键名 */
 function unknownKeys(record, allowed) {
@@ -129,11 +129,16 @@ export async function validateProject(root, { site, apps, categories }) {
     if (!Array.isArray(app.platforms) || !app.platforms.length) {
       warnings.push(`${label}：没有写 platforms（例如 ["Windows", "Android"]）。`);
     } else {
-      const badPlatforms = app.platforms.filter((item) => !PLATFORM_NAMES.includes(String(item)));
+      const badPlatforms = app.platforms.filter((item) => !PLATFORM_VALUES.includes(String(item)));
       if (badPlatforms.length) {
         errors.push(
-          `data/apps.json：${label} 的 platforms 里有不认识的平台「${badPlatforms.join('、')}」（只能写：${PLATFORM_NAMES.join('、')}）。`
+          `data/apps.json：${label} 的 platforms 里有不认识的平台「${badPlatforms.join('、')}」（只能写：${PLATFORM_VALUES.join('、')}）。`
         );
+      }
+      const hasConcrete = app.platforms.some((p) => !WILDCARD_PLATFORMS.includes(String(p)));
+      const hasWildcard = app.platforms.some((p) => WILDCARD_PLATFORMS.includes(String(p)));
+      if (hasConcrete && hasWildcard) {
+        warnings.push(`${label}：platforms 里同时写了具体系统和「${WILDCARD_PLATFORMS.join('、')}」，建议只保留具体系统。`);
       }
     }
     if (app.category && !categoryNames.includes(String(app.category))) {
@@ -141,7 +146,11 @@ export async function validateProject(root, { site, apps, categories }) {
         `data/apps.json：${label} 的 category「${app.category}」不在 data/categories.json 里（可以写：${categoryList}）。`
       );
     }
-    if (!Array.isArray(app.downloads) || !app.downloads.length) {
+    // 写了但类型不对（例如 "downloads": "https://…"）是数据错误，不能只当成「没写」：
+    // 那样会安静地构建出一个没有下载按钮的详情页。
+    if (!Array.isArray(app.downloads)) {
+      errors.push(`data/apps.json：${label} 的 downloads 必须是数组。`);
+    } else if (!app.downloads.length) {
       warnings.push(`${label}：没有写 downloads 下载项，详情页会显示「暂无下载」。`);
     }
     if (app.changelog && !Array.isArray(app.changelog)) {
@@ -157,7 +166,10 @@ export async function validateProject(root, { site, apps, categories }) {
       seen.set(app.id, index);
     }
 
-    for (const [i, entry] of (app.changelog || []).entries()) {
+    // 下面三个循环都要先确认是数组：字段类型写错（例如 "changelog": "一句备注"）时，
+    // 上面已经 push 了中文错误，这里再对字符串调 .entries() 只会抛英文 TypeError，
+    // 把真正有用的提示盖掉。
+    for (const [i, entry] of (Array.isArray(app.changelog) ? app.changelog : []).entries()) {
       if (!entry || typeof entry !== 'object') {
         errors.push(`data/apps.json：${label} 的第 ${i + 1} 条更新日志不是对象。`);
         continue;
@@ -166,7 +178,7 @@ export async function validateProject(root, { site, apps, categories }) {
       if (bad.length) errors.push(unknownFieldMessage(`${label} 的第 ${i + 1} 条更新日志`, bad, CHANGELOG_FIELDS));
     }
 
-    for (const [i, entry] of (app.history || []).entries()) {
+    for (const [i, entry] of (Array.isArray(app.history) ? app.history : []).entries()) {
       if (!entry || typeof entry !== 'object') {
         errors.push(`data/apps.json：${label} 的第 ${i + 1} 条历史版本不是对象。`);
         continue;
@@ -175,13 +187,19 @@ export async function validateProject(root, { site, apps, categories }) {
       if (bad.length) errors.push(unknownFieldMessage(`${label} 的第 ${i + 1} 条历史版本`, bad, HISTORY_FIELDS));
     }
 
-    for (const [i, item] of (app.downloads || []).entries()) {
+    for (const [i, item] of (Array.isArray(app.downloads) ? app.downloads : []).entries()) {
       if (!item || !item.url) {
         errors.push(`${label}：第 ${i + 1} 个下载项缺少 url。`);
         continue;
       }
       const bad = unknownKeys(item, DOWNLOAD_FIELDS);
       if (bad.length) errors.push(unknownFieldMessage(`${label} 的第 ${i + 1} 个下载项`, bad, DOWNLOAD_FIELDS));
+
+      if (item.platform && !PLATFORM_VALUES.includes(String(item.platform))) {
+        errors.push(
+          `data/apps.json：${label} 的第 ${i + 1} 个下载项平台「${item.platform}」不认识（只能写：${PLATFORM_VALUES.join('、')}）。`
+        );
+      }
 
       const url = String(item.url);
       if (/^https?:/i.test(url)) {

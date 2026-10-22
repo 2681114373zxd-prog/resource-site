@@ -206,7 +206,13 @@ window.SITE_DATA = ${jsonForScript(bundle)};
   bundles.forEach((item) => ok(`${item.out}（${item.label}，${(item.size / 1024).toFixed(1)} KB）`));
 
   // 3. 静态详情页 ----------------------------------------------------------
-  const template = await readFile(join(ROOT, 'scripts', 'templates', 'detail.html'), 'utf8');
+  // 读入的 HTML 先归一到 LF：模板和 index.html 在 Windows 工作树里是 CRLF（core.autocrlf=true），
+  // 而干净 clone / CI 里是 LF。不归一的话，同一份代码在两边构建出的字节不同，
+  // dist 里的 HTML 也会带着 CR 一起发布，跟 bundle.mjs 对 JS 的处理保持一致。
+  const template = (await readFile(join(ROOT, 'scripts', 'templates', 'detail.html'), 'utf8')).replace(
+    /\r\n/g,
+    '\n'
+  );
   const ogImage = absolute(site, site.ogImage || 'assets/images/og-cover.png');
 
   const commonVars = {
@@ -355,7 +361,7 @@ ${feedItems
 
   // 5. 更新 index.html 的 SEO 区块 ----------------------------------------
   const indexPath = join(ROOT, 'index.html');
-  let indexHtml = await readFile(indexPath, 'utf8');
+  let indexHtml = (await readFile(indexPath, 'utf8')).replace(/\r\n/g, '\n');
   const seoBlock = `  <title>${safeText(`${site.name} · ${site.tagline}`, 60)}</title>
   <meta name="description" content="${safeText(site.description || site.tagline || '', 160)}">
   <meta name="keywords" content="${(site.keywords || []).join(', ')}">

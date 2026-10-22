@@ -82,6 +82,23 @@ export function recordHistory(app, previous, { max = 10 } = {}) {
   return true;
 }
 
+/* --------------------------------------------------------------------------
+   平台枚举
+   --------------------------------------------------------------------------
+   后台的「平台」下拉里除了 4 个具体系统，还有「全平台」（发布 .zip 时
+   files.mjs 也会判成它）和 iOS（.ipa）。所以白名单必须包含这些值，
+   否则用户在后台正常发布一次，下一次构建就会红。
+   -------------------------------------------------------------------------- */
+export const PLATFORM_VALUES = ['Windows', 'macOS', 'Linux', 'Android', 'iOS', '全平台'];
+export const WILDCARD_PLATFORMS = ['全平台'];
+
+/** 合并平台列表：有具体 OS 时丢掉通配值，只剩通配值时保留。 */
+export function mergePlatforms(list) {
+  const all = [...new Set((list || []).filter(Boolean).map(String))];
+  const concrete = all.filter((p) => !WILDCARD_PLATFORMS.includes(p));
+  return concrete.length ? concrete : all;
+}
+
 /** 一个软件对象能不能写进 apps.json（返回中文错误信息，空数组 = 没问题） */
 export function validateApp(app) {
   const errors = [];

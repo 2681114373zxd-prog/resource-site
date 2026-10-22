@@ -726,7 +726,11 @@ async function saveApp({ push = false } = {}) {
     app.category = form.category;
     app.featured = form.featured;
     if (form.tagline) app.tagline = form.tagline;
-    app.platforms = [...new Set([...(app.platforms || []), form.platform, ...app.downloads.map((item) => item.platform)].filter(Boolean))];
+    app.platforms = DATA.mergePlatforms([
+      ...(app.platforms || []),
+      form.platform,
+      ...app.downloads.map((item) => item.platform),
+    ]);
 
     const notes = form.notes.split(/[;；]/).map((text) => text.trim()).filter(Boolean);
     if (online) {
@@ -772,9 +776,10 @@ async function saveAppOnline(app, existing, notes) {
 
   app.updated = today;
   app.releaseDate = app.releaseDate || today;
-  app.platforms = [
-    ...new Set([...(app.platforms || []), ...app.downloads.map((item) => item.platform)].filter(Boolean)),
-  ];
+  app.platforms = DATA.mergePlatforms([
+    ...(app.platforms || []),
+    ...app.downloads.map((item) => item.platform),
+  ]);
 
   const problems = DATA.validateApp(app);
   if (problems.length) return setStatus(status, problems.join(' '), 'err');
