@@ -7,7 +7,7 @@
 
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PLATFORM_VALUES, WILDCARD_PLATFORMS } from './app-data.mjs';
+import { PLATFORM_VALUES, WILDCARD_PLATFORMS, isDateLike } from './app-data.mjs';
 
 /** 读取 JSON（出错时给出友好提示） */
 async function readJson(path) {
@@ -91,6 +91,31 @@ function unknownFieldMessage(where, keys, allowed) {
   return `data/apps.json：${where}有未知字段「${keys.join('、')}」，字段名必须用英文（允许的字段：${allowed.join('、')}）。`;
 }
 
+/* --------------------------------------------------------------------------
+   日期校验
+   --------------------------------------------------------------------------
+   updated / releaseDate / changelog.date / history.date 不只是显示：sortApps 排序、
+   sitemap.xml 的 lastmod、feed.xml 的 pubDate、详情页「更新于」都直接吃它们，
+   写坏了页面上就是 NaN / Invalid Date。
+
+   判定规则是「格式 ∧ 可解析」，两条缺一不可：
+     · 只查格式   → 2026-13-01 / 2026-09-32 蒙混过关
+     · 只查可解析 → 2026/09/03 或「2026年9月3日」会被 V8 解析成功
+   再加一次往返比对：2026-02-30 格式对、Date 也「能解析」，但会静默滚成 03-02。
+
+   只写年份 / 年月是允许的（作者真实写过的历史写法，例如 Termux 的 "2026"）。
+
+   判定逻辑本身在 scripts/app-data.mjs 的 isDateLike()：后台在线保存
+   （js/admin.js）走的是同一份逻辑，两边必须一致。
+   -------------------------------------------------------------------------- */
+
+/** 字段写了但不是合法日期时返回一句中文错误；没写（或空串）返回空，交给其它提醒管 */
+function dateIssue(where, field, value) {
+  if (value === undefined || value === null || String(value).trim() === '') return '';
+  if (isDateLike(value)) return '';
+  return `data/apps.json：${where} 的 ${field}「${value}」不是合法日期（可以写 2026、2026-09 或 2026-09-03）。`;
+}
+
 /**
  * 校验数据，返回 { errors, warnings }
  * errors   → 构建会失败，必须修
@@ -126,6 +151,11 @@ export async function validateProject(root, { site, apps, categories }) {
     if (!app.name) errors.push(`${label}：缺少 name 字段。`);
     if (!app.version) warnings.push(`${label}：没有写 version，卡片上会显示 “—”。`);
     if (!app.updated && !app.releaseDate) warnings.push(`${label}：建议填写 updated（更新时间），排序会用到。`);
+    // 日期：缺失只提醒（可选字段，别拦发布），写了但不合法直接拦
+    for (const field of ['updated', 'releaseDate']) {
+      const issue = dateIssue(label, field, app[field]);
+      if (issue) errors.push(issue);
+    }
     if (!Array.isArray(app.platforms) || !app.platforms.length) {
       warnings.push(`${label}：没有写 platforms（例如 ["Windows", "Android"]）。`);
     } else {
@@ -176,6 +206,8 @@ export async function validateProject(root, { site, apps, categories }) {
       }
       const bad = unknownKeys(entry, CHANGELOG_FIELDS);
       if (bad.length) errors.push(unknownFieldMessage(`${label} 的第 ${i + 1} 条更新日志`, bad, CHANGELOG_FIELDS));
+      const dateBad = dateIssue(`${label} 的第 ${i + 1} 条更新日志`, 'date', entry.date);
+      if (dateBad) errors.push(dateBad);
     }
 
     for (const [i, entry] of (Array.isArray(app.history) ? app.history : []).entries()) {
@@ -185,6 +217,8 @@ export async function validateProject(root, { site, apps, categories }) {
       }
       const bad = unknownKeys(entry, HISTORY_FIELDS);
       if (bad.length) errors.push(unknownFieldMessage(`${label} 的第 ${i + 1} 条历史版本`, bad, HISTORY_FIELDS));
+      const dateBad = dateIssue(`${label} 的第 ${i + 1} 条历史版本`, 'date', entry.date);
+      if (dateBad) errors.push(dateBad);
     }
 
     for (const [i, item] of (Array.isArray(app.downloads) ? app.downloads : []).entries()) {

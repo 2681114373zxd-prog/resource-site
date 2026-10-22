@@ -353,6 +353,26 @@ function mergePlatforms(list) {
   return concrete.length ? concrete : all;
 }
 
+/* --------------------------------------------------------------------------
+   日期
+   --------------------------------------------------------------------------
+   数据里的日期只认 ISO 写法（2026 / 2026-09 / 2026-09-03）。写成
+   「2026/09/03」或「待更新」不会让构建失败，但排序、sitemap 的 lastmod
+   都会安静地取到错的值，所以必须先拦住。
+   -------------------------------------------------------------------------- */
+const DATE_RE = /^\d{4}(-\d{2}){0,2}$/;
+
+/** 是否是可信的日期值。"2026"、"2026-09"、"2026-09-03" 都算；"2026-02-30" 不算。 */
+function isDateLike(v) {
+  const s = String(v).slice(0, 10);
+  if (!DATE_RE.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return false;
+  // 完整日期要往返一致：2026-02-30 会静默滚成 2026-03-02，必须拦住
+  if (s.length === 10) return d.toISOString().slice(0, 10) === s;
+  return true;
+}
+
 /** 一个软件对象能不能写进 apps.json（返回中文错误信息，空数组 = 没问题） */
 function validateApp(app) {
   const errors = [];
@@ -370,5 +390,5 @@ function validateApp(app) {
 }
 
   // 挂到全局，供后台页面（js/admin.js）直接调用
-  window.XIXI_DATA = { PLATFORM_VALUES, WILDCARD_PLATFORMS, mergeDownload, mergePlatforms, nextBump, pushChangelog, recordHistory, removeApp, setTopLevelValue, spliceApp, stringifyStyled, validateApp };
+  window.XIXI_DATA = { PLATFORM_VALUES, WILDCARD_PLATFORMS, isDateLike, mergeDownload, mergePlatforms, nextBump, pushChangelog, recordHistory, removeApp, setTopLevelValue, spliceApp, stringifyStyled, validateApp };
 })();
