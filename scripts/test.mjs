@@ -1766,6 +1766,52 @@ await test('防线 9／updated 日期：缺失只提醒，写了但不合法必�
   assert.deepEqual(wrong, [], `updated 日期的判定不符合预期：\n        ${wrong.join('\n        ')}`);
 });
 
+await test('防线 12／子结构里的日期也要拦：changelog[].date 与 history[].date 写错必须报错', async () => {
+  // updated 只是软件级的日期。更新日志和历史版本里的 date 会被 feed/详情页直接拿去显示，
+  // 写错了同样是「看起来正常、实际是错日期」，而且这两处以前没有任何校验。
+  const demoApp = (patch) => ({
+    id: 'demo-tool',
+    name: '演示工具',
+    downloads: [{ name: '安装包', url: 'https://example.com/demo-tool-1.0.0.exe' }],
+    ...patch,
+  });
+  const cases = [
+    {
+      label: 'changelog[0].date = "2026-02-30"（日期不存在）',
+      app: demoApp({ changelog: [{ version: '1.0.0', date: '2026-02-30' }] }),
+      expectZero: false,
+      mustMention: [/更新日志/, /demo-tool/],
+    },
+    {
+      label: 'history[0].date = "2026/09/03"（斜杠不是 ISO）',
+      app: demoApp({ history: [{ version: '0.9.0', date: '2026/09/03' }] }),
+      expectZero: false,
+      mustMention: [/历史版本/, /demo-tool/],
+    },
+    {
+      label: 'changelog[0].date = "2026-09-03"（合法，不能误伤）',
+      app: demoApp({ changelog: [{ version: '1.0.0', date: '2026-09-03' }] }),
+      expectZero: true,
+    },
+  ];
+  const wrong = [];
+  for (const item of cases) {
+    const { code, output } = await checkWithAppsData([item.app]);
+    const expected = item.expectZero ? '0' : '非 0';
+    if ((code === 0) !== item.expectZero) {
+      const tail = output.trim().split('\n').filter((line) => line.trim()).slice(-2).join(' / ');
+      wrong.push(`${item.label}：期望退出码 ${expected}，实际 ${code} → ${tail}`);
+      continue;
+    }
+    if (item.expectZero) continue;
+    for (const pattern of item.mustMention || []) {
+      if (!pattern.test(output)) wrong.push(`${item.label}：错误信息里缺少 ${pattern} → ${output.trim()}`);
+    }
+    if (/\n\s+at\s/.test(output)) wrong.push(`${item.label}：甩出了 Node 调用栈 → ${output.trim()}`);
+  }
+  assert.deepEqual(wrong, [], `子结构日期的判定不符合预期：\n        ${wrong.join('\n        ')}`);
+});
+
 await test('防线 10／页脚年份必须是「数据的年份」，且不随构建机器的时区变化', async () => {
   // 背景：页脚年份以前取 new Date().getFullYear() —— 跨年那天全站页脚会集体变一次，
   // 产生一堆和内容无关的 diff，而「连跑两次 build」的幂等用例当天根本测不出来。
