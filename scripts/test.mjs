@@ -10,7 +10,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -127,10 +127,14 @@ function assertSameText(actual, expected, label, hint) {
   assert.fail(detail);
 }
 
-/** 跑一个 node 脚本，拿回 { code, stdout, stderr } */
-function runNode(scriptPath, cwd) {
+/** 跑一个 node 脚本，拿回 { code, stdout, stderr }；extraEnv 用于覆盖 TZ / SOURCE_DATE_EPOCH */
+function runNode(scriptPath, cwd, extraEnv) {
   return new Promise((done) => {
-    const child = spawn(process.execPath, [scriptPath], { cwd, windowsHide: true });
+    const child = spawn(process.execPath, [scriptPath], {
+      cwd,
+      windowsHide: true,
+      env: extraEnv ? { ...process.env, ...extraEnv } : process.env,
+    });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk) => {
@@ -146,9 +150,15 @@ function runNode(scriptPath, cwd) {
 
 const pathExists = (target) => stat(target).then(() => true, () => false);
 
-/** dist 不存在就先构建一次：绝对不能让「没构建」被当成「检查通过」 */
+/**
+ * dist 不存在就先构建一次：绝对不能让「没构建」被当成「检查通过」。
+ * 副作用说明：这一步会在**仓库根目录**真跑一次 build —— 会重写 dist/（已在 .gitignore 里）
+ * 以及被 git 跟踪的生成物（幂等，正常情况写出来的字节与提交的一致，git status 不会变脏）。
+ * 只在 dist 缺失时才会触发（干净 clone / CI 一定走这条路），所以会打印一行提示，不静默。
+ */
 async function ensureDist() {
   if (await pathExists(join(ROOT, 'dist', 'index.html'))) return;
+  console.log('      （dist/ 不存在，先在本仓库构建一次）');
   const result = await runNode(join(ROOT, 'scripts', 'build.mjs'), ROOT);
   assert.equal(result.code, 0, `dist 不存在，尝试构建也失败了：${result.stderr || result.stdout}`);
   assert.ok(await pathExists(join(ROOT, 'dist', 'index.html')), '构建声称成功，但 dist/index.html 还是没有');
@@ -1426,28 +1436,47 @@ console.log('\n数据契约与构建确定性防线：');
 const FIXTURES = join(ROOT, 'scripts', 'fixtures');
 
 /**
- * 把 check.mjs / validate.mjs / 真实 data/ 拷进一个临时目录，
- * 用 fixture 替换其中的 apps.json，然后跑真正的 node 进程。
- * 全程不碰仓库里的文件：用例失败、中途崩溃都不会留下脏工作区。
+ * 把 check.mjs / validate.mjs / 真实 data/ 拷进一个临时目录，写入指定的 apps.json，
+ * 然后跑真正的 node 进程。全程不碰仓库里的文件：用例失败、中途崩溃都不会留下脏工作区。
  */
-async function checkWithAppsFixture(fixture) {
+async function withTempCheck(writeApps) {
   const dir = await mkdtemp(join(tmpdir(), 'xixi-check-'));
   try {
     await mkdir(join(dir, 'scripts'), { recursive: true });
     await mkdir(join(dir, 'data'), { recursive: true });
-    for (const file of ['check.mjs', 'validate.mjs']) {
+    // scripts/ 下的 .mjs 全拷：check.mjs 依赖 validate.mjs，而 validate.mjs 又会 import
+    // app-data.mjs（PLATFORM_VALUES 等）。只拷两个文件的话，上游一加依赖这里就 ENOENT，
+    // 但那不是被测代码的问题，是我这个替身的漏洞 —— 所以整个目录平铺拷过去。
+    const scriptFiles = (await readdir(join(ROOT, 'scripts'))).filter((file) => file.endsWith('.mjs'));
+    for (const file of scriptFiles) {
       await copyFile(join(ROOT, 'scripts', file), join(dir, 'scripts', file));
     }
     for (const file of ['site.json', 'categories.json']) {
       await copyFile(join(ROOT, 'data', file), join(dir, 'data', file));
     }
-    await copyFile(join(FIXTURES, fixture), join(dir, 'data', 'apps.json'));
+    await writeApps(join(dir, 'data', 'apps.json'));
     const result = await runNode(join(dir, 'scripts', 'check.mjs'), dir);
-    return { code: result.code, output: `${result.stdout}${result.stderr}` };
+    const output = `${result.stdout}${result.stderr}`;
+    // 环境自检：临时项目里的模块解析失败，说明是我这个替身没拷全（例如上游新增了
+    // scripts/lib/ 之类的依赖），不是被测逻辑坏了。必须大声说清楚，否则下一个人会
+    // 顺着「check.mjs 报错」去查一段本来没问题的代码。
+    assert.ok(
+      !/ERR_MODULE_NOT_FOUND|Cannot find module|Cannot find package/.test(output),
+      `测试替身不完整：临时目录里的 check.mjs 解析不到依赖模块（不是被测代码的问题）。\n` +
+        `  请检查 withTempCheck 是否漏拷文件。原始输出：\n${output.trim()}`
+    );
+    return { code: result.code, output };
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
 }
+
+/** 用 scripts/fixtures/ 里的一份坏数据替换 apps.json */
+const checkWithAppsFixture = (fixture) => withTempCheck((dest) => copyFile(join(FIXTURES, fixture), dest));
+
+/** 直接给一条软件记录（省掉一堆只用一次的小 fixture 文件） */
+const checkWithAppsData = (apps) =>
+  withTempCheck((dest) => writeFile(dest, JSON.stringify({ apps }, null, 2), 'utf8'));
 
 await test('防线 1／app 集合一致性：data/apps.generated.js 的软件集合必须和 apps.json 一模一样', async () => {
   requireData();
@@ -1482,15 +1511,61 @@ await test('防线 2／中文键：apps.json 出现「名称 / 版本 / 下载�
 
 const LF_ONLY_FILES = ['js/home.js', 'js/app.js', 'js/admin-lib.js', 'data/apps.generated.js'];
 
-await test('防线 3／换行符：js/home.js、js/app.js、js/admin-lib.js、data/apps.generated.js 必须是纯 LF', async () => {
+await test('防线 3／换行符：dist 下所有 .js/.html 与 4 个关键产物必须是纯 LF', async () => {
   const dirty = [];
+  const blame = (file, text) => {
+    const hit = text.split('\n').findIndex((line) => line.includes('\r'));
+    const cr = (text.match(/\r/g) || []).length;
+    const lf = (text.match(/\n/g) || []).length;
+    const kind = cr === lf ? '全 CRLF' : 'CRLF/LF 混用';
+    // 换行是从哪里漏进来的，直接写在报错里，省得下次有人从头查
+    const hint = file.endsWith('dist/index.html')
+      ? '　→ build.mjs 读入 index.html 时没做 \\r\\n 归一'
+      : /dist\/apps\/.*\.html$/.test(file)
+        ? '　→ build.mjs 读入 scripts/templates/detail.html 时没做 \\r\\n 归一'
+        : file.startsWith('dist/')
+          ? '　→ build.mjs 生成/写出时没归一'
+          : '　→ bundle.mjs / build.mjs 生成时没归一';
+    dirty.push(`${file}（${cr} 个 \\r / ${lf} 行，${kind}，首个在第 ${hit + 1} 行）${hint}`);
+  };
+
+  // 1) 关键产物：这几个是 bundle.mjs / build.mjs 直接拼出来的
   for (const file of LF_ONLY_FILES) {
     const text = await readSource(file);
-    if (!text.includes('\r')) continue;
-    const hit = text.split('\n').findIndex((line) => line.includes('\r'));
-    dirty.push(`${file}（首个 \\r 在第 ${hit + 1} 行）`);
+    if (text.includes('\r')) blame(file, text);
   }
-  assert.deepEqual(dirty, [], `这些文件里混进了 CRLF，不同系统构建会互相打架：${dirty.join('；')}`);
+
+  // 2) dist 下「构建产出的」页面：首页（build 原地重写 index.html 后由 copyTree 拷进 dist）、
+  //    apps/ 下所有详情页（模板渲染）、sitemap/feed/robots（build 直接生成）。
+  //    目录级断言比写死几个文件名更抗未来（新增软件、新增页面自动覆盖）。
+  //    **不覆盖**的是 copyTree 原样拷贝、换行由 .gitattributes（* text=auto eol=lf）负责的那批：
+  //      · 404.html、admin/index.html
+  //      · assets/css/*.css、assets/**/*.svg
+  //      · data/*.json
+  //      · js/ 下的源 ES 模块（js/shared.js、js/render.js…；浏览器实际加载的是 bundle
+  //        js/home.js / js/app.js，源模块只是被一起拷进 dist）
+  //    这些在「.gitattributes 生效前签出的旧工作树」里会带 CR，属于过渡态、不是 bug；
+  //    所以本仓库的口径是「构建产出的页面跨平台可复现」，不是「dist 里所有文件都可复现」。
+  //    别把这条断言顺手扩到 dist 全量 —— 那会让每个 Windows 开发者天天红。
+  await ensureDist();
+  const dist = join(ROOT, 'dist');
+  const detailPages = (await readdir(join(dist, 'apps'), { recursive: true }))
+    .map((item) => `apps/${String(item).replace(/\\/g, '/')}`)
+    .filter((file) => /\.html$/i.test(file));
+  const targets = ['index.html', 'sitemap.xml', 'feed.xml', 'robots.txt', ...detailPages].sort();
+  assert.ok(detailPages.length >= 1, 'dist/apps 下没有详情页，构建看起来没跑完');
+  for (const file of targets) {
+    const text = await readFile(join(dist, file), 'utf8');
+    if (text.includes('\r')) blame(`dist/${file}`, text);
+  }
+
+  assert.deepEqual(
+    dirty.slice(0, 8),
+    [],
+    `这些文件里混进了 CRLF，本机构建与 CI 构建会产出不同字节（共 ${dirty.length} 个文件，前 8 个）：\n        ${dirty
+      .slice(0, 8)
+      .join('\n        ')}`
+  );
 });
 
 /** 递归复制目录（用于给构建造一份干净副本，绝不碰工作区） */
@@ -1558,10 +1633,218 @@ await test('防线 5／坏数据友好报错：非法 JSON 时 check.mjs 必须�
   assert.ok(lines.length <= 4, `报错应该收敛成几行中文，实际 ${lines.length} 行：\n${output}`);
 });
 
+await test('防线 5／坏数据友好报错：字段类型写错（changelog / history 写成字符串）也必须给中文提示', async () => {
+  // 语法错只是坏数据的一种。类型写错（把 chanelog 写成一句话）时，
+  // validate.mjs 先 push 一条「必须是数组」，紧接着又对字符串调 .entries() 抛 TypeError，
+  // 而 check.mjs 的 try/catch 只包了 loadProject —— 用户看到的是英文堆栈。
+  for (const fixture of ['apps-changelog-string.json', 'apps-history-string.json']) {
+    const { code, output } = await checkWithAppsFixture(fixture);
+    assert.notEqual(code, 0, `${fixture}：类型写错必须让 check.mjs 非 0 退出，实际 ${code}\n${output}`);
+    assert.match(output, /必须是数组/, `${fixture}：应该给「必须是数组」的中文提示：\n${output}`);
+    assert.ok(!/\n\s+at\s/.test(output), `${fixture}：不该把 Node 的原始调用栈甩给用户：\n${output}`);
+  }
+});
+
 await test('防线 6／空站：apps.json 一条软件都没有时 check.mjs 必须失败', async () => {
   const { code, output } = await checkWithAppsFixture('apps-empty.json');
   assert.notEqual(code, 0, `空数据必须让 check.mjs 非 0 退出，实际退出码 ${code}\n${output}`);
   assert.match(output, /没有任何软件/, `错误信息要说明「没有任何软件」：\n${output}`);
+});
+
+await test('防线 7／下载项类型写错不许静默残站：downloads 是字符串时必须报错，不能只给一句提醒', async () => {
+  // 这跟「写成空数组」是两件事，必须分两档：
+  //   downloads: []          → 提醒（真的还没上传包，属正常状态）
+  //   downloads: "https://…" → 错误（用户以为配好了，实际所有下载按钮都会消失）
+  // 如果只把 (app.downloads || []) 换成 Array.isArray(...) ? ... : []，
+  // 第二种就变成「一条提醒 + 静默残站 + 退出码 0」，正是本次事故要防的那类问题。
+  const { code, output } = await checkWithAppsFixture('apps-downloads-string.json');
+  assert.notEqual(
+    code,
+    0,
+    `downloads 是字符串必须让 check.mjs 非 0 退出（否则会构建出没有下载按钮的残站），实际退出码 ${code}\n${output}`
+  );
+  assert.match(output, /必须是数组/, `应该明确说是类型错了「必须是数组」，而不是「没有写 downloads」：\n${output}`);
+  assert.ok(!/\n\s+at\s/.test(output), `不该把 Node 的原始调用栈甩给用户：\n${output}`);
+});
+
+await test('防线 8／平台字段：合法值要放行（含 全平台 / iOS），写错要拦，下载项也不能瞎写', async () => {
+  // 口径（lead 定案，依据是函数级证据，不是下拉的视觉位置）：
+  //   js/admin.js 里同一个 form.platform 被三处消费 ——
+  //     :610  platform: form.platform    （下载项平台）
+  //     :682  platforms: [form.platform] （新建软件的 platforms 数组）
+  //     :729  app.platforms = [...合并 downloads 的平台]
+  //   所以作者发布一个 .zip（files.mjs:99-104 判成「全平台」）或 .ipa（判成「iOS」），
+  //   落盘就是 platforms: ["全平台"] / ["iOS"]。校验要是拦它，下一次 CI 就红 ——
+  //   等于把我们要消灭的 bug 换了个入口重演。所以这两个值必须放行。
+  //
+  // 那数据质量靠谁守？靠合并函数（mergePlatforms 的单测「A2」）：
+  //   validate       判断「值是否合法」   → 全平台/iOS 合法；Linuxx 非法
+  //   mergePlatforms 判断「合并后留哪个」 → 有具体 OS 时丢掉通配值
+  // 校验放宽 ≠ 允许污染；两层职责不同，别把「校验放行」读成「数据可以脏」。
+  const demoApp = (patch) => ({
+    id: 'demo-tool',
+    name: '演示工具',
+    downloads: [{ name: '安装包', url: 'https://example.com/demo-tool-1.0.0.exe' }],
+    ...patch,
+  });
+  const cases = [
+    { label: 'platforms: ["Linuxx"]（错别字，唯一的下限守卫）', app: demoApp({ platforms: ['Linuxx'] }), expectZero: false },
+    { label: 'platforms: ["全平台"]（后台发布 .zip 就会写成这样）', app: demoApp({ platforms: ['全平台'] }), expectZero: true },
+    { label: 'platforms: ["Windows","全平台"]（混写最多提醒，不拦）', app: demoApp({ platforms: ['Windows', '全平台'] }), expectZero: true },
+    { label: 'platforms: ["iOS"]（.ipa 的结果）', app: demoApp({ platforms: ['iOS'] }), expectZero: true },
+    {
+      label: 'downloads[].platform: "全平台"（合法通配）',
+      app: demoApp({ downloads: [{ name: '全部下载', url: 'https://example.com/demo-tool', platform: '全平台' }] }),
+      expectZero: true,
+    },
+    {
+      label: 'downloads[].platform: "not-a-platform"（下载项也不能瞎写）',
+      app: demoApp({ downloads: [{ name: '安装包', url: 'https://example.com/a.exe', platform: 'not-a-platform' }] }),
+      expectZero: false,
+    },
+  ];
+  const wrong = [];
+  for (const item of cases) {
+    const { code, output } = await checkWithAppsData([item.app]);
+    const expected = item.expectZero ? '0' : '非 0';
+    if ((code === 0) !== item.expectZero) {
+      const tail = output.trim().split('\n').filter((line) => line.trim()).slice(-2).join(' / ');
+      wrong.push(`${item.label}：期望退出码 ${expected}，实际 ${code} → ${tail}`);
+      continue;
+    }
+    if (!item.expectZero && /\n\s+at\s/.test(output)) {
+      wrong.push(`${item.label}：拦是拦住了，但甩出了 Node 调用栈 → ${output.trim()}`);
+    }
+  }
+  assert.deepEqual(wrong, [], `平台字段的判定不符合预期：\n        ${wrong.join('\n        ')}`);
+});
+
+await test('防线 9／updated 日期：缺失只提醒，写了但不合法必须拦（含「格式像但解析失败」）', async () => {
+  // updated 不只是显示：sortApps 排序、sitemap.xml 的 lastmod、feed.xml 的 pubDate 都吃它。
+  // 档位（lead 定）：字段存在但不可解析 → error；字段缺失 → warning（可选字段，别拦发布）。
+  // 规则是「格式 ∧ 可解析」，缺一不可：
+  //   · 只查格式   → 2026-13-01 / 2026-09-32 蒙混过关，最后页脚 © NaN
+  //   · 只查可解析 → 2026/09/03 被 V8 解析成功，混进 sitemap 的 lastmod
+  // "2026"（只写年份）必须放行：这是作者真实写过的历史写法（Termux 原文就是 "2026"），
+  // 断言成红就等于把「历史数据的合法写法」钉成错误 —— 本条专防这种误报，别删。
+  const demoApp = (patch) => ({
+    id: 'demo-tool',
+    name: '演示工具',
+    downloads: [{ name: '安装包', url: 'https://example.com/demo-tool-1.0.0.exe' }],
+    ...patch,
+  });
+  const cases = [
+    { label: 'updated: "2026"（只写年份，历史写法）', app: demoApp({ updated: '2026' }), expectZero: true },
+    { label: 'updated: "2026-09"', app: demoApp({ updated: '2026-09' }), expectZero: true },
+    { label: 'updated: "2026-09-03"', app: demoApp({ updated: '2026-09-03' }), expectZero: true },
+    { label: 'updated 缺失（可选字段，只提醒）', app: demoApp({}), expectZero: true },
+    { label: 'updated: "2026-9-3"（缺前导零）', app: demoApp({ updated: '2026-9-3' }), expectZero: false },
+    { label: 'updated: "2026/09/03"（斜杠不是 ISO）', app: demoApp({ updated: '2026/09/03' }), expectZero: false },
+    { label: 'updated: "2026年9月3日"（中文日期）', app: demoApp({ updated: '2026年9月3日' }), expectZero: false },
+    { label: 'updated: "待更新"（占位文本）', app: demoApp({ updated: '待更新' }), expectZero: false },
+    { label: 'updated: "2026-13-01"（格式像但解析失败）', app: demoApp({ updated: '2026-13-01' }), expectZero: false },
+    { label: 'updated: "2026-09-32"（格式像但解析失败）', app: demoApp({ updated: '2026-09-32' }), expectZero: false },
+    // 格式合法、Date 也「能解析」，但会静默滚成 2026-03-02：sitemap 的 lastmod 和 feed 的
+    // pubDate 都会变成 3 月 2 日，比格式错误更隐蔽。必须靠往返校验才拦得住。
+    { label: 'updated: "2026-02-30"（日期不存在，会滚成 03-02）', app: demoApp({ updated: '2026-02-30' }), expectZero: false },
+  ];
+  const wrong = [];
+  for (const item of cases) {
+    const { code, output } = await checkWithAppsData([item.app]);
+    const expected = item.expectZero ? '0' : '非 0';
+    if ((code === 0) !== item.expectZero) {
+      const tail = output.trim().split('\n').filter((line) => line.trim()).slice(-2).join(' / ');
+      wrong.push(`${item.label}：期望退出码 ${expected}，实际 ${code} → ${tail}`);
+      continue;
+    }
+    if (item.expectZero) continue;
+    // 报错要能定位：既说字段名，也说哪条记录
+    if (!/updated/.test(output)) wrong.push(`${item.label}：错误信息里没有字段名 updated → ${output.trim()}`);
+    if (!/demo-tool/.test(output)) wrong.push(`${item.label}：错误信息里没有记录 id demo-tool → ${output.trim()}`);
+    if (/\n\s+at\s/.test(output)) wrong.push(`${item.label}：甩出了 Node 调用栈 → ${output.trim()}`);
+  }
+  assert.deepEqual(wrong, [], `updated 日期的判定不符合预期：\n        ${wrong.join('\n        ')}`);
+});
+
+await test('防线 10／页脚年份必须是「数据的年份」，且不随构建机器的时区变化', async () => {
+  // 背景：页脚年份以前取 new Date().getFullYear() —— 跨年那天全站页脚会集体变一次，
+  // 产生一堆和内容无关的 diff，而「连跑两次 build」的幂等用例当天根本测不出来。
+  // 现在改成从 buildDate（由 SOURCE_DATE_EPOCH 或数据里最新的 updated 派生）取 UTC 年份。
+  //
+  // 为什么要在两个时区各跑一次（这两条各自能抓住不同的退化，UTC 环境下两条都抓不到）：
+  //   ① TZ=Asia/Shanghai + epoch=2023-12-31T20:00Z
+  //      → 若有人改成「从 epoch 这个 Date 对象取本地年份」，+08:00 已是 2024-01-01，页脚变 2024
+  //   ② TZ=America/New_York + epoch=2024-01-01T00:00Z
+  //      → 若有人把 getUTCFullYear() 写回 getFullYear()，-05:00 还是 2023-12-31，页脚掉回 2023
+  //   两条断言值分别是 2023 / 2024：任何一条被写错，就有一条会红。
+  const runs = [
+    {
+      tz: 'Asia/Shanghai',
+      epoch: '1704052800',
+      expect: '2023',
+      why: '这个时刻在 +08:00 已经是 2024-01-01，用本地年份派生会变成 2024',
+    },
+    {
+      tz: 'America/New_York',
+      epoch: '1704067200',
+      expect: '2024',
+      why: 'buildDate 是 2024-01-01，用本地年份派生在 -05:00 会掉回 2023',
+    },
+  ];
+  requireData();
+  const dir = await mkdtemp(join(tmpdir(), 'xixi-year-'));
+  try {
+    const skip = new Set(['.git', 'dist', 'node_modules', '.wrangler', '.cache', '.shots']);
+    await copyTree(ROOT, dir, skip);
+    const seen = {};
+    for (const item of runs) {
+      const result = await runNode(join(dir, 'scripts', 'build.mjs'), dir, {
+        SOURCE_DATE_EPOCH: item.epoch,
+        TZ: item.tz,
+      });
+      assert.equal(result.code, 0, `TZ=${item.tz} 构建失败：${result.stderr || result.stdout}`);
+      const html = await readFile(join(dir, 'dist', 'apps', primaryId, 'index.html'), 'utf8');
+      const match = /©\s*(\d{4})/.exec(html);
+      assert.ok(match, `TZ=${item.tz} 的详情页里找不到页脚年份`);
+      seen[item.tz] = match[1];
+      assert.equal(match[1], item.expect, `TZ=${item.tz} 页脚年份应为 ${item.expect}（${item.why}），实际 ${match[1]}`);
+    }
+    assert.deepEqual(
+      Object.values(seen).sort(),
+      Array.from(new Set(runs.map((item) => item.expect))).sort(),
+      `不同时区构建出的页脚年份不一致：${JSON.stringify(seen)}`
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+await test('防线 11／mergePlatforms：合并时丢掉通配值，只剩通配时才保留（守住写入端）', async () => {
+  // 校验层放行「全平台」之后，数据质量全靠这个函数：
+  //   validate       判断「值是否合法」   → 全平台/iOS 合法
+  //   mergePlatforms 判断「合并后留哪个」 → 有具体 OS 就丢掉通配值
+  // 后台 admin.js:729/775 把下载项平台并进 app.platforms 时走它，
+  // 否则「Windows + 全平台」会变成混写，详情页显示「Windows · 全平台」、分类也匹配不到。
+  // 用动态 import：万一函数还没实现，这里只红一条，不会把整个测试文件加载搞崩。
+  const appData = await import('./app-data.mjs');
+  assert.equal(typeof appData.mergePlatforms, 'function', 'scripts/app-data.mjs 需要导出 mergePlatforms(list)');
+  const cases = [
+    { input: ['Windows', '全平台'], expect: ['Windows'], why: '有具体 OS 时丢掉通配' },
+    { input: ['全平台'], expect: ['全平台'], why: '只剩通配时保留（别把作者唯一的选择删光）' },
+    { input: ['Windows'], expect: ['Windows'], why: '单个具体 OS 原样返回' },
+    { input: ['Windows', 'Linux', 'Windows'], expect: ['Windows', 'Linux'], why: '去重且保持顺序' },
+    { input: [], expect: [], why: '空数组还是空数组' },
+  ];
+  const wrong = [];
+  for (const item of cases) {
+    const actual = appData.mergePlatforms(item.input);
+    try {
+      assert.deepEqual(actual, item.expect);
+    } catch {
+      wrong.push(`mergePlatforms(${JSON.stringify(item.input)})：期望 ${JSON.stringify(item.expect)}，实际 ${JSON.stringify(actual)}（${item.why}）`);
+    }
+  }
+  assert.deepEqual(wrong, [], `mergePlatforms 的行为不符合预期：\n        ${wrong.join('\n        ')}`);
 });
 
 /* ---------------- 汇总 ---------------- */

@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "id": "demo-tool",
+      "name": "演示工具",
+      "downloads": "https://example.com/demo-tool-1.0.0-x64.exe"
+    }
+  ]
+}

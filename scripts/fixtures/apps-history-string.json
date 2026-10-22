@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "id": "demo-tool",
+      "name": "演示工具",
+      "history": "v1.0.0"
+    }
+  ]
+}

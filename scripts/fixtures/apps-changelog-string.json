@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "id": "demo-tool",
+      "name": "演示工具",
+      "changelog": "2026-01-01 修了个 bug"
+    }
+  ]
+}
