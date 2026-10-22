@@ -5,49 +5,35 @@
     <link>https://2681114373.ccwu.cc/</link>
     <description>Xixi 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Mon, 21 Sep 2026 07:04:48 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 00:00:00 GMT</lastBuildDate>
     <atom:link href="https://2681114373.ccwu.cc/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>Notepad++ v8.7.1</title>
-      <link>https://2681114373.ccwu.cc/apps/notepad-plus-plus/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/notepad-plus-plus/</guid>
-      <pubDate>Sat, 18 Jan 2025 00:00:00 GMT</pubDate>
-      <description>轻量好用的 Windows 代码与文本编辑器 / 修复若干崩溃问题 / 更新简体中文翻译 / 提升大文件打开速度</description>
-    </item>
-    <item>
-      <title>OBS Studio v31.0.1</title>
-      <link>https://2681114373.ccwu.cc/apps/obs-studio/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/obs-studio/</guid>
-      <pubDate>Wed, 15 Jan 2025 00:00:00 GMT</pubDate>
-      <description>开源免费的录屏与直播推流软件 / 修复 31.0 版本中若干推流中断问题 / 改进 macOS 录屏权限引导 / 新增 AV1 硬件编码支持</description>
-    </item>
-    <item>
-      <title>Termux v0.118.1</title>
-      <link>https://2681114373.ccwu.cc/apps/termux/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/termux/</guid>
-      <pubDate>Wed, 01 Jan 2025 00:00:00 GMT</pubDate>
-      <description>Android 上的 Linux 终端模拟器 / 适配 Android 14 / 15 / 修复部分设备上的存储权限问题 / 更新 bootstrap 包</description>
-    </item>
-    <item>
-      <title>LocalSend v1.16.1</title>
-      <link>https://2681114373.ccwu.cc/apps/localsend/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/localsend/</guid>
-      <pubDate>Sat, 07 Dec 2024 00:00:00 GMT</pubDate>
-      <description>跨平台局域网文件互传工具，无需数据线 / 修复部分 Android 设备无法接收文件的问题 / Windows 版本新增自动更新检查 / 改善大文件传输进度显示</description>
-    </item>
-    <item>
-      <title>7-Zip v24.09</title>
+      <title>7-Zip v26.03</title>
       <link>https://2681114373.ccwu.cc/apps/7zip/</link>
       <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/7zip/</guid>
-      <pubDate>Fri, 29 Nov 2024 00:00:00 GMT</pubDate>
-      <description>免费开源的高压缩率压缩 / 解压工具 / 修复了 7z 与 zip 解压时的若干安全问题 / 改进 ARM64 版本性能 / 更新简体中文语言文件</description>
+      <pubDate>Thu, 03 Sep 2026 00:00:00 GMT</pubDate>
+      <description>免费开源的高压缩率压缩 / 解压工具 / 更新至7-Zip26.03英寸 / 提供最新Windows x64/ARM64/x86版本 / 更新Linux命令行版本</description>
     </item>
     <item>
-      <title>Umi-OCR v2.1.4</title>
+      <title>OBS Studio v32.2.2</title>
+      <link>https://2681114373.ccwu.cc/apps/obs-studio/</link>
+      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/obs-studio/</guid>
+      <pubDate>Fri, 14 Aug 2026 00:00:00 GMT</pubDate>
+      <description>开源免费的录屏与直播推流软件 / 更新至OBS Studio32.2.2 / 继续支持Windows/macOS/Linux / 使用官方 OBS 下载渠道</description>
+    </item>
+    <item>
+      <title>Termux v0.118.3</title>
+      <link>https://2681114373.ccwu.cc/apps/termux/</link>
+      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/termux/</guid>
+      <pubDate>Thu, 01 Jan 2026 00:00:00 GMT</pubDate>
+      <description>Android上的Linux终端模拟器 / 更新至Termux0.118.3 / 继续支持Android7.0及以上 / 提供GitHub和F-Droid官方下载渠道</description>
+    </item>
+    <item>
+      <title>Umi-OCR v2.1.5</title>
       <link>https://2681114373.ccwu.cc/apps/umi-ocr/</link>
       <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/umi-ocr/</guid>
-      <pubDate>Sat, 26 Oct 2024 00:00:00 GMT</pubDate>
-      <description>免费开源的离线批量 OCR 文字识别工具 / 优化批量识别时的内存占用 / 修复部分 PDF 页面识别乱码 / 更新中文识别模型</description>
+      <pubDate>Thu, 29 May 2025 00:00:00 GMT</pubDate>
+      <description>免费开源的离线批量 OCR 文字识别工具 / 更新 Umi-OCR 至 2.1.5 / 继续支持 Windows 7 x64 及以上 / 提供多种官方下载渠道</description>
     </item>
   </channel>
 </rss>

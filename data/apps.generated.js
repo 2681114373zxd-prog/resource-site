@@ -1,8 +1,8 @@
 /* 由 scripts/build.mjs 自动生成，请勿手动修改。
    数据来源：data/site.json + data/categories.json + data/apps.json
-   生成时间：2026-09-21T07:04:48.487Z */
+   生成时间：2026-09-03T00:00:00.000Z */
 window.SITE_DATA = {
-  "generatedAt": "2026-09-21T07:04:48.487Z",
+  "generatedAt": "2026-09-03T00:00:00.000Z",
   "site": {
     "name": "Xixi",
     "nameCn": "Xixi 软件站",
@@ -71,7 +71,7 @@ window.SITE_DATA = {
       "id": "7zip",
       "name": "7-Zip",
       "tagline": "免费开源的高压缩率压缩 / 解压工具",
-      "description": "7-Zip 是一款完全免费、开源的压缩与解压工具，支持 7z、zip、rar、tar、gz 等几乎所有常见格式。\n\n特点：\n\n- 7z 格式压缩率高于 zip，适合长期归档\n- 自带右键菜单，操作简单\n- 无广告、无捆绑、完全免费\n\n> 提示：本站提供官方 GitHub Release 的直链，你也可以在软件详情页选择适合自己系统的架构（x64 / ARM64 / 32 位）。",
+      "description": "7-Zip是一款完全免费、开源的压缩与解压工具，支持7z、zip、rar、tar、gz等常见格式。\n\n特点：\n\n-7z格式压缩率高，适合长期归档\n-自带Windows右键菜单\n-无广告、免费、开源\n-支持Windows与Linux\n\n本站优先提供官方7-Zip下载地址。",
       "icon": "",
       "category": "工具",
       "platforms": [
@@ -83,227 +83,88 @@ window.SITE_DATA = {
         "解压",
         "开源",
         "免费",
-        "绿色"
+        "7z"
       ],
-      "version": "24.09",
-      "releaseDate": "2024-11-29",
-      "updated": "2024-11-29",
-      "size": "1.6 MB",
-      "license": "LGPL-2.1（部分 BSD）",
+      "version": "26.03",
+      "releaseDate": "2026-09-03",
+      "updated": "2026-09-03",
+      "size": "约1.6 MB",
+      "license": "LGPL-2.1(部分BSD/unrar限制)",
       "homepage": "https://www.7-zip.org/",
       "repo": "https://github.com/ip7z/7zip",
       "requirements": [
-        "Windows 7 / 8 / 10 / 11（32 位、x64、ARM64）",
-        "Linux x64 / ARM64（命令行版本）"
+        "Windows7/8/10/11",
+        "支持x86/x64/ARM64",
+        "Linux x64/ARM64/ARM32位(命令行版本)"
       ],
       "featured": true,
       "downloads": [
         {
-          "name": "Windows x64 安装版",
-          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-x64.exe",
-          "size": "1.6 MB",
+          "name": "Windows x64安装版",
+          "url": "https://www.7-zip.org/a/7z2603-x64.exe",
+          "size": "约1.6 MB",
           "platform": "Windows",
           "arch": "x64",
           "type": "installer"
         },
         {
-          "name": "Windows ARM64 安装版",
-          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-arm64.exe",
-          "size": "1.6 MB",
+          "name": "Windows ARM64安装版",
+          "url": "https://www.7-zip.org/a/7z2603-arm64.exe",
+          "size": "约1.5 MB",
           "platform": "Windows",
           "arch": "arm64",
           "type": "installer"
         },
         {
-          "name": "Windows 32 位安装版",
-          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409.exe",
-          "size": "1.5 MB",
+          "name": "Windows32位安装版",
+          "url": "https://www.7-zip.org/a/7z2603.exe",
+          "size": "约1.3 MB",
           "platform": "Windows",
           "arch": "x86",
           "type": "installer"
         },
         {
-          "name": "Linux x64 命令行版",
-          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-linux-x64.tar.xz",
-          "size": "1.7 MB",
+          "name": "Linux x64命令行版",
+          "url": "https://www.7-zip.org/a/7z2603-linux-x64.tar.xz",
+          "size": "约1.7 MB",
           "platform": "Linux",
           "arch": "x64",
           "type": "archive"
         },
         {
-          "name": "Linux ARM64 命令行版",
-          "url": "https://github.com/ip7z/7zip/releases/download/24.09/7z2409-linux-arm64.tar.xz",
-          "size": "1.7 MB",
+          "name": "Linux ARM64命令行版",
+          "url": "https://www.7-zip.org/a/7z2603-linux-arm64.tar.xz",
+          "size": "约1.7 MB",
           "platform": "Linux",
           "arch": "arm64",
           "type": "archive"
-        }
-      ],
-      "changelog": [
-        {
-          "version": "24.09",
-          "date": "2024-11-29",
-          "notes": [
-            "修复了 7z 与 zip 解压时的若干安全问题",
-            "改进 ARM64 版本性能",
-            "更新简体中文语言文件"
-          ]
         },
         {
-          "version": "24.08",
-          "date": "2024-08-10",
-          "notes": [
-            "新增对 ARM64 处理器优化的压缩算法",
-            "修复 RAR 分卷解压失败的问题"
-          ]
-        }
-      ],
-      "history": [
-        {
-          "version": "23.01",
-          "date": "2023-06-20",
-          "size": "1.5 MB",
-          "notes": [
-            "稳定性更新"
-          ],
-          "downloads": [
-            {
-              "name": "Windows x64（旧版）",
-              "url": "https://github.com/ip7z/7zip/releases/download/23.01/7z2301-x64.exe",
-              "size": "1.5 MB",
-              "platform": "Windows",
-              "arch": "x64",
-              "type": "installer"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "localsend",
-      "name": "LocalSend",
-      "tagline": "跨平台局域网文件互传工具，无需数据线",
-      "description": "LocalSend 是一款开源、跨平台的文件传输工具，手机、电脑只要连在同一个 Wi-Fi 下就可以互传文件。\n\n**不需要账号、不需要联网、不经过服务器**，所有传输都在局域网内直接进行，速度取决于你的路由器。\n\n- 支持 Windows / macOS / Linux / Android / iOS\n- 自动发现同一网络中的设备，也可扫码配对\n- 传输过程加密，文件不落第三方服务器\n\n适合在手机和电脑之间传安装包、照片、文档。",
-      "icon": "",
-      "category": "工具",
-      "platforms": [
-        "Windows",
-        "macOS",
-        "Linux",
-        "Android"
-      ],
-      "tags": [
-        "文件传输",
-        "跨平台",
-        "局域网",
-        "开源"
-      ],
-      "version": "1.16.1",
-      "releaseDate": "2024-12-07",
-      "updated": "2024-12-07",
-      "size": "约 30 MB",
-      "license": "MIT",
-      "homepage": "https://localsend.org/",
-      "repo": "https://github.com/localsend/localsend",
-      "requirements": [
-        "Windows 10 及以上（x64 / ARM64）",
-        "macOS 11 及以上",
-        "Android 5.0 及以上",
-        "Linux（AppImage / deb）"
-      ],
-      "featured": true,
-      "downloads": [
-        {
-          "name": "Windows x64",
-          "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-windows-x86-64.exe",
-          "size": "31 MB",
-          "platform": "Windows",
-          "arch": "x64",
-          "type": "installer"
-        },
-        {
-          "name": "Windows ARM64",
-          "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-windows-arm64.exe",
-          "size": "29 MB",
-          "platform": "Windows",
-          "arch": "arm64",
-          "type": "installer"
-        },
-        {
-          "name": "macOS Apple Silicon",
-          "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-macos-arm64.dmg",
-          "size": "33 MB",
-          "platform": "macOS",
-          "arch": "arm64",
-          "type": "dmg"
-        },
-        {
-          "name": "Android ARM64",
-          "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-android-arm64.apk",
-          "size": "28 MB",
-          "platform": "Android",
-          "arch": "arm64",
-          "type": "apk"
-        },
-        {
-          "name": "Linux AppImage (x64)",
-          "url": "https://github.com/localsend/localsend/releases/download/v1.16.1/LocalSend-1.16.1-linux-x86-64.AppImage",
-          "size": "34 MB",
-          "platform": "Linux",
-          "arch": "x64",
-          "type": "appimage"
-        },
-        {
-          "name": "全部平台（官方发布页）",
-          "url": "https://github.com/localsend/localsend/releases/latest",
+          "name": "官方全部下载",
+          "url": "https://www.7-zip.org/download.html",
           "size": "-",
           "platform": "全平台",
-          "type": "link",
-          "note": "如果你需要的架构不在上面，请到这里手动选择"
+          "type": "link"
         }
       ],
       "changelog": [
         {
-          "version": "1.16.1",
-          "date": "2024-12-07",
+          "version": "26.03",
+          "date": "2026-09-03",
           "notes": [
-            "修复部分 Android 设备无法接收文件的问题",
-            "Windows 版本新增自动更新检查",
-            "改善大文件传输进度显示"
-          ]
-        },
-        {
-          "version": "1.15.0",
-          "date": "2024-09-18",
-          "notes": [
-            "新增扫码配对功能",
-            "界面重构，支持深色模式"
+            "更新至7-Zip26.03英寸",
+            "提供最新Windows x64/ARM64/x86版本",
+            "更新Linux命令行版本"
           ]
         }
       ],
-      "history": [
-        {
-          "version": "1.15.0",
-          "date": "2024-09-18",
-          "size": "30 MB",
-          "downloads": [
-            {
-              "name": "Windows x64（旧版）",
-              "url": "https://github.com/localsend/localsend/releases/download/v1.15.0/LocalSend-1.15.0-windows-x86-64.exe",
-              "size": "30 MB",
-              "platform": "Windows",
-              "arch": "x64",
-              "type": "installer"
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     {
       "id": "umi-ocr",
       "name": "Umi-OCR",
       "tagline": "免费开源的离线批量 OCR 文字识别工具",
-      "description": "Umi-OCR 是一款开源、免费、**完全离线**的 OCR 截图识别与批量识别工具，对中文场景（截图、文档、表格）支持很好。\n\n- 截图识别、批量图片识别、PDF 识别\n- 离线运行，不需要联网，不上传任何图片\n- 支持 Windows 7 / 10 / 11，自带多种识别引擎\n\n这是我在整理资料时最常用的工具之一，识别中文的速度和准确率都不错。",
+      "description": "Umi-OCR是一款免费、开源、完全离线的OCR文字识别工具，适合截图识字、批量图片识别以及PDF文档识别。\n\n-截图识别\n-批量图片识别\n-PDF/文档识别\n-完全离线运行\n-支持Windows7x64及以上\n\n官方同时提供GitHub、SourceForge和蓝奏云下载渠道。",
       "icon": "",
       "category": "工具",
       "platforms": [
@@ -316,155 +177,63 @@ window.SITE_DATA = {
         "中文",
         "开源"
       ],
-      "version": "2.1.4",
-      "releaseDate": "2024-10-26",
-      "updated": "2024-10-26",
-      "size": "约 180 MB",
+      "version": "2.1.5",
+      "releaseDate": "2025-05-29",
+      "updated": "2025-05-29",
+      "size": "约180 MB",
       "license": "MIT",
       "homepage": "https://github.com/hiroi-sora/Umi-OCR",
       "repo": "https://github.com/hiroi-sora/Umi-OCR",
       "requirements": [
-        "Windows 7 / 8 / 10 / 11（x64）",
-        "建议 4 GB 以上内存",
-        "首次运行请解压到不含中文的路径"
+        "Windows 7 x64 及以上",
+        "建议 4 GB 以上内存"
       ],
       "featured": false,
       "downloads": [
         {
-          "name": "Windows x64 完整版（7z 压缩包）",
-          "url": "https://github.com/hiroi-sora/Umi-OCR/releases/download/v2.1.4/Umi-OCR_Rapid_v2.1.4.7z",
-          "size": "180 MB",
-          "platform": "Windows",
-          "arch": "x64",
-          "type": "archive",
-          "note": "解压即用，需要 7-Zip 或 WinRAR 解压"
-        },
-        {
-          "name": "全部版本（官方发布页）",
+          "name": "官方 GitHub 最新版本",
           "url": "https://github.com/hiroi-sora/Umi-OCR/releases/latest",
           "size": "-",
           "platform": "Windows",
+          "arch": "x64",
+          "type": "link"
+        },
+        {
+          "name": "官方蓝奏云下载",
+          "url": "https://hiroi-sora.lanzoul.com/s/umi-ocr",
+          "size": "-",
+          "platform": "Windows",
+          "arch": "x64",
+          "type": "link",
+          "note": "Umi-OCR 官方项目提供的国内下载渠道"
+        },
+        {
+          "name": "官方 SourceForge 下载",
+          "url": "https://sourceforge.net/projects/umi-ocr/",
+          "size": "-",
+          "platform": "Windows",
+          "arch": "x64",
           "type": "link"
         }
       ],
       "changelog": [
         {
-          "version": "2.1.4",
-          "date": "2024-10-26",
+          "version": "2.1.5",
+          "date": "2025-05-29",
           "notes": [
-            "优化批量识别时的内存占用",
-            "修复部分 PDF 页面识别乱码",
-            "更新中文识别模型"
+            "更新 Umi-OCR 至 2.1.5",
+            "继续支持 Windows 7 x64 及以上",
+            "提供多种官方下载渠道"
           ]
         }
       ],
       "history": []
     },
     {
-      "id": "notepad-plus-plus",
-      "name": "Notepad++",
-      "tagline": "轻量好用的 Windows 代码与文本编辑器",
-      "description": "Notepad++ 是 Windows 上最经典的免费文本 / 代码编辑器，启动快、占用低，支持语法高亮、正则查找替换、多标签页与大量插件。\n\n下载页同时提供「安装版」和「便携版」，便携版解压后可以直接放进 U 盘使用。",
-      "icon": "",
-      "category": "Windows",
-      "platforms": [
-        "Windows"
-      ],
-      "tags": [
-        "编辑器",
-        "文本",
-        "代码",
-        "便携版",
-        "免费"
-      ],
-      "version": "8.7.1",
-      "releaseDate": "2025-01-18",
-      "updated": "2025-01-18",
-      "size": "5.2 MB",
-      "license": "GPL-3.0",
-      "homepage": "https://notepad-plus-plus.org/",
-      "repo": "https://github.com/notepad-plus-plus/notepad-plus-plus",
-      "requirements": [
-        "Windows 7 / 8 / 10 / 11",
-        "安装版需要管理员权限，便携版不需要"
-      ],
-      "featured": false,
-      "downloads": [
-        {
-          "name": "Windows x64 安装版",
-          "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.Installer.x64.exe",
-          "size": "5.2 MB",
-          "platform": "Windows",
-          "arch": "x64",
-          "type": "installer"
-        },
-        {
-          "name": "Windows ARM64 安装版",
-          "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.Installer.arm64.exe",
-          "size": "5.0 MB",
-          "platform": "Windows",
-          "arch": "arm64",
-          "type": "installer"
-        },
-        {
-          "name": "Windows x64 便携版（zip）",
-          "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.1/npp.8.7.1.portable.x64.zip",
-          "size": "5.6 MB",
-          "platform": "Windows",
-          "arch": "x64",
-          "type": "portable",
-          "note": "解压即用，不写注册表"
-        },
-        {
-          "name": "本站备份（示例：放在 downloads/ 里的本地文件）",
-          "url": "downloads/README.md",
-          "size": "1 KB",
-          "platform": "Windows",
-          "type": "file",
-          "note": "把安装包放进 downloads/ 后，把 url 改成 downloads/你的文件名 即可"
-        }
-      ],
-      "changelog": [
-        {
-          "version": "8.7.1",
-          "date": "2025-01-18",
-          "notes": [
-            "修复若干崩溃问题",
-            "更新简体中文翻译",
-            "提升大文件打开速度"
-          ]
-        },
-        {
-          "version": "8.6.9",
-          "date": "2024-12-02",
-          "notes": [
-            "新增 ARM64 原生安装包"
-          ]
-        }
-      ],
-      "history": [
-        {
-          "version": "8.6.9",
-          "date": "2024-12-02",
-          "size": "5.0 MB",
-          "downloads": [
-            {
-              "name": "Windows x64（旧版）",
-              "url": "https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.6.9/npp.8.6.9.Installer.x64.exe",
-              "size": "5.0 MB",
-              "platform": "Windows",
-              "arch": "x64",
-              "type": "installer"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "id": "obs-studio",
       "name": "OBS Studio",
       "tagline": "开源免费的录屏与直播推流软件",
-      "description": "OBS Studio 是使用最广泛的开源录屏 / 直播软件，支持多场景切换、窗口采集、麦克风降噪、虚拟摄像头等。\n\n- 录屏、直播、虚拟摄像头三合一\n- 支持 Windows / macOS / Linux\n- 插件生态丰富，可扩展性很强\n\n> 提示：直播推流需要填写平台给你的推流地址与密钥，请自行从平台后台获取。",
+      "description": "OBS Studio 是一款开源免费的录屏、直播和视频采集软件。\n\n- 录屏\n- 直播推流\n- 窗口 / 游戏 / 摄像头采集\n- 虚拟摄像头\n- 支持 Windows / macOS / Linux\n- 拥有丰富的插件生态\n\n本站提供官方 OBS 下载页面，用户可以根据自己的系统选择对应版本。",
       "icon": "",
       "category": "其他",
       "platforms": [
@@ -479,62 +248,53 @@ window.SITE_DATA = {
         "开源",
         "视频"
       ],
-      "version": "31.0.1",
-      "releaseDate": "2025-01-15",
-      "updated": "2025-01-15",
-      "size": "约 140 MB",
+      "version": "32.2.2",
+      "releaseDate": "2026-08-14",
+      "updated": "2026-08-14",
+      "size": "约140 MB",
       "license": "GPL-2.0",
       "homepage": "https://obsproject.com/",
       "repo": "https://github.com/obsproject/obs-studio",
       "requirements": [
-        "Windows 10 / 11（x64）",
-        "macOS 12 及以上",
-        "Ubuntu 22.04 / 24.04 或同等发行版",
-        "建议独立显卡或支持硬件编码的 CPU"
+        "Windows 10 / 11",
+        "macOS 13.0 及以上",
+        "Linux"
       ],
       "featured": true,
       "downloads": [
         {
-          "name": "Windows x64 安装版",
-          "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-Windows-Installer.exe",
-          "size": "142 MB",
+          "name": "Windows 官方下载",
+          "url": "https://obsproject.com/download",
+          "size": "-",
           "platform": "Windows",
           "arch": "x64",
-          "type": "installer"
+          "type": "link"
         },
         {
-          "name": "macOS Apple Silicon",
-          "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-macOS-Apple.dmg",
-          "size": "168 MB",
+          "name": "macOS 官方下载",
+          "url": "https://obsproject.com/download",
+          "size": "-",
           "platform": "macOS",
-          "arch": "arm64",
-          "type": "dmg"
+          "arch": "x64 / arm64",
+          "type": "link"
         },
         {
-          "name": "Linux Ubuntu 24.04 (deb)",
-          "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-Ubuntu-24.04-x86_64.deb",
-          "size": "135 MB",
+          "name": "Linux官方下载",
+          "url": "https://obsproject.com/download",
+          "size": "-",
           "platform": "Linux",
           "arch": "x64",
-          "type": "deb"
-        },
-        {
-          "name": "Linux AppImage",
-          "url": "https://github.com/obsproject/obs-studio/releases/download/31.0.1/OBS-Studio-31.0.1-x86_64.AppImage",
-          "size": "150 MB",
-          "platform": "Linux",
-          "arch": "x64",
-          "type": "appimage"
+          "type": "link"
         }
       ],
       "changelog": [
         {
-          "version": "31.0.1",
-          "date": "2025-01-15",
+          "version": "32.2.2",
+          "date": "2026-08-14",
           "notes": [
-            "修复 31.0 版本中若干推流中断问题",
-            "改进 macOS 录屏权限引导",
-            "新增 AV1 硬件编码支持"
+            "更新至OBS Studio32.2.2",
+            "继续支持Windows/macOS/Linux",
+            "使用官方 OBS 下载渠道"
           ]
         }
       ],
@@ -543,8 +303,8 @@ window.SITE_DATA = {
     {
       "id": "termux",
       "name": "Termux",
-      "tagline": "Android 上的 Linux 终端模拟器",
-      "description": "Termux 让你在 Android 手机上拥有一个完整的 Linux 命令行环境，可以安装 Python、Git、Node.js、SSH 等工具。\n\n- 不需要 root 权限\n- 自带包管理器 `pkg` / `apt`，可安装上千个软件包\n- 适合在手机上跑脚本、当 SSH 客户端、做简单开发\n\n**请注意：请从官方 GitHub Release 或 F-Droid 下载，不要从第三方应用商店安装，以免被植入恶意代码。**",
+      "tagline": "Android上的Linux终端模拟器",
+      "description": "Termux可以在安卓手机上提供Linux命令行环境，可以安装Python、Git、Node.js、SSH等工具。\n\n-不需要root权限\n-支持pkg/apt包管理器\n-可以运行shell、Python等程序\n-适合手机开发、SSH和脚本运行\n\n请注意：Termux的不同发行渠道使用不同的签名，F-Droid、GitHub和谷歌应用商店版本不要混装。",
       "icon": "",
       "category": "Android",
       "platforms": [
@@ -557,53 +317,52 @@ window.SITE_DATA = {
         "开源",
         "开发"
       ],
-      "version": "0.118.1",
-      "releaseDate": "2025-01-01",
-      "updated": "2025-01-01",
-      "size": "约 110 MB",
+      "version": "0.118.3",
+      "releaseDate": "2026-01-01",
+      "updated": "2026-01-01",
+      "size": "约180MB(含基础环境)",
       "license": "GPL-3.0",
       "homepage": "https://termux.dev/",
       "repo": "https://github.com/termux/termux-app",
       "requirements": [
-        "Android 7.0 及以上",
-        "ARM64 设备（绝大多数现代手机）",
-        "需要允许安装未知来源应用"
+        "Android7.0及以上",
+        "支持ARM64/ARMv7/x86/x86_64"
       ],
       "featured": false,
       "downloads": [
         {
-          "name": "Android ARM64 APK",
-          "url": "https://github.com/termux/termux-app/releases/download/v0.118.1/termux-app_v0.118.1+github-debug_arm64-v8a.apk",
-          "size": "110 MB",
+          "name": "Termux官方GitHub发布",
+          "url": "https://github.com/termux/termux-app/releases/latest",
+          "size": "-",
           "platform": "Android",
-          "arch": "arm64",
-          "type": "apk"
+          "arch": "arm64/armv7/x86/x86_64",
+          "type": "link"
         },
         {
-          "name": "Android 通用 APK",
-          "url": "https://github.com/termux/termux-app/releases/download/v0.118.1/termux-app_v0.118.1+github-debug_universal.apk",
-          "size": "120 MB",
-          "platform": "Android",
-          "arch": "universal",
-          "type": "apk"
-        },
-        {
-          "name": "F-Droid 版本（推荐日常使用）",
+          "name": "Termux官方F-Droid",
           "url": "https://f-droid.org/packages/com.termux/",
           "size": "-",
           "platform": "Android",
+          "arch": "universal",
           "type": "link",
-          "note": "F-Droid 会自动更新，比 GitHub debug 版更省心"
+          "note": "官方支持的F-Droid下载渠道"
+        },
+        {
+          "name": "Termux官方网站",
+          "url": "https://termux.dev/",
+          "size": "-",
+          "platform": "Android",
+          "type": "link"
         }
       ],
       "changelog": [
         {
-          "version": "0.118.1",
-          "date": "2025-01-01",
+          "version": "0.118.3",
+          "date": "2026-01-01",
           "notes": [
-            "适配 Android 14 / 15",
-            "修复部分设备上的存储权限问题",
-            "更新 bootstrap 包"
+            "更新至Termux0.118.3",
+            "继续支持Android7.0及以上",
+            "提供GitHub和F-Droid官方下载渠道"
           ]
         }
       ],
