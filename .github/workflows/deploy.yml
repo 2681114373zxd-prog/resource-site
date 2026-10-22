@@ -31,13 +31,13 @@ jobs:
       - name: 检查数据（有问题会给出中文提示）
         run: node scripts/check.mjs
 
-      - name: 构建静态站点
-        run: node scripts/build.mjs
-
-      # 构建之后再自检：这样即使你忘记在本地跑 npm run build，
-      # CI 也会用最新源码重新生成 js/home.js、js/app.js 和各个详情页，部署不会挂。
+      # 自检必须在构建之前跑：build.mjs 会重写 js/home.js / js/app.js 和各个详情页，
+      # 先构建再自检的话，「产物是否是最新的」这条用例永远通过（等于没测）。
       - name: 运行自检
         run: node scripts/test.mjs
+
+      - name: 构建静态站点
+        run: node scripts/build.mjs
 
       # 第一次部署最常见的失败原因：仓库还没开启 Pages。
       # 这里提前检查一次并给出中文操作指引，比 configure-pages 的英文报错友好得多。
