@@ -10,8 +10,18 @@ import { loadProject, validateProject } from './validate.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
-const { site, apps } = await loadProject(ROOT);
-const { errors, warnings } = await validateProject(ROOT, { site, apps });
+let project;
+try {
+  project = await loadProject(ROOT);
+} catch (error) {
+  // JSON 语法错误、顶层键写错之类的问题会直接抛到这里：
+  // 只打一行能看懂的中文，不甩一串 stack，但退出码仍然是 1（CI 照样会红）。
+  console.error(`\n\u2717 ${error.message}\n`);
+  process.exit(1);
+}
+
+const { site, apps, categories } = project;
+const { errors, warnings } = await validateProject(ROOT, { site, apps, categories });
 
 console.log(`\n检查 data/ ：${apps.length} 个软件\n`);
 warnings.forEach((message) => console.log(`  ! ${message}`));
