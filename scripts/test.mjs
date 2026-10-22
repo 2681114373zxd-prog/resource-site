@@ -1893,6 +1893,61 @@ await test('防线 11／mergePlatforms：合并时丢掉通配值，只剩通配
   assert.deepEqual(wrong, [], `mergePlatforms 的行为不符合预期：\n        ${wrong.join('\n        ')}`);
 });
 
+await test('防线 13／首页年份要和详情页一致、由数据派生，且固定 SDE 下连跑两次一致', async () => {
+  // G 项：首页 index.html 的 © 年份以前是写死的 2026，并且被 js/core.js 用访客本机年份
+  // 在运行时覆盖 —— 于是「静态产物」和「用户看到的」都不是数据年份，只是恰好都等于今年。
+  // 现在改为 <!-- YEAR:START --> … <!-- YEAR:END --> 替换块，由 build.mjs 按 buildDate 注入。
+  //
+  // 两条都要，缺一条就能被绕过：
+  //   ① 源码里必须还有这个标记 —— 标记被删掉时构建压根不替换，而写死的值可能恰好等于
+  //      期望年份（今天 2026 正好是这种最坏情况），只查产物会漏；
+  //   ② 产物里首页年份 == 详情页年份 == 2023，且 != 写死的 2026 —— SDE 必须取「非今年」，
+  //      否则注入值与写死值分不出来。
+  const source = await readSource('index.html');
+  assert.match(
+    source,
+    /<!--\s*YEAR:START\s*-->[\s\S]*<!--\s*YEAR:END\s*-->/,
+    'index.html 里必须保留 <!-- YEAR:START --> … <!-- YEAR:END --> 替换块（删了它年份就不会被构建替换）'
+  );
+
+  const footerYear = (html, label) => {
+    const match = /©[\s\S]{0,120}?(\d{4})/.exec(html);
+    assert.ok(match, `${label} 里找不到页脚年份`);
+    return match[1];
+  };
+
+  requireData();
+  const dir = await mkdtemp(join(tmpdir(), 'xixi-home-year-'));
+  try {
+    await copyTree(ROOT, dir, new Set(['.git', 'dist', 'node_modules', '.wrangler', '.cache', '.shots']));
+    const env = { SOURCE_DATE_EPOCH: '1704052800', TZ: 'Asia/Shanghai' };
+    const build = async (round) => {
+      const result = await runNode(join(dir, 'scripts', 'build.mjs'), dir, env);
+      assert.equal(result.code, 0, `第 ${round} 次构建失败：${result.stderr || result.stdout}`);
+    };
+
+    await build(1);
+    const homeYear = footerYear(await readFile(join(dir, 'dist', 'index.html'), 'utf8'), 'dist/index.html');
+    const detailYear = footerYear(
+      await readFile(join(dir, 'dist', 'apps', primaryId, 'index.html'), 'utf8'),
+      `dist/apps/${primaryId}/index.html`
+    );
+    assert.equal(homeYear, '2023', `首页页脚年份应为数据年份 2023，实际 ${homeYear}`);
+    assert.equal(detailYear, '2023', `详情页页脚年份应为 2023，实际 ${detailYear}`);
+    assert.equal(homeYear, detailYear, `首页(${homeYear})与详情页(${detailYear})的年份必须一致`);
+    assert.notEqual(homeYear, '2026', '首页年份仍是写死的 2026 —— 说明它没有被构建替换');
+
+    // F 项注入了墙钟（buildNow = epoch ?? new Date()），所以固定 SDE 之后
+    // 「连跑两次一致」才真正成立；否则只能证明同一天内稳定，跨零点会抖。
+    const before = await treeManifest(join(dir, 'dist'));
+    await build(2);
+    const after = await treeManifest(join(dir, 'dist'));
+    assert.deepEqual(after, before, '固定 SOURCE_DATE_EPOCH 下连跑两次，dist 必须逐字节一致');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 /* ---------------- 汇总 ---------------- */
 console.log(`\n${failed ? '\u2717' : '\u2713'} 通过 ${passed} 项${failed ? `，失败 ${failed} 项` : '，全部通过'}\n`);
 if (failed) process.exitCode = 1;
