@@ -8,6 +8,7 @@
    ========================================================================== */
 
 import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
 import { readFile, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -48,7 +49,107 @@ async function test(name, fn) {
   } catch (error) {
     failed += 1;
     console.log(`  \u2717 ${name}\n      ${error.message}`);
+    // 默认只打一行信息；要看清调用栈时用 VERBOSE=1 npm test
+    if (process.env.VERBOSE === '1' && error.stack) console.log(error.stack);
   }
+}
+
+/* --------------------------------------------------------------------------
+   数据前置
+   --------------------------------------------------------------------------
+   以前这里是模块顶层的 `const { site, apps } = await loadProject(ROOT)`，
+   没有 try/catch：data/apps.json 一坏，未捕获异常直接把进程打死，后面
+   （含数据校验、发布工具、本地/在线后台、构建产物）的用例全部不执行，
+   但汇总行也不会打印 —— 看日志的人只看到「跑了几个就没了」。
+
+   现在改成：抛错只记下来，所有用例照常跑，靠 requireData() 让依赖数据的
+   用例明确变红。用例总数恒定，失败时一个都不会少。
+   -------------------------------------------------------------------------- */
+let project = null;
+let projectError = null;
+try {
+  project = await loadProject(ROOT);
+} catch (error) {
+  projectError = error;
+  process.exitCode = 1; // 数据坏了，退出码必须非 0
+}
+const site = project?.site || {};
+const categories = project?.categories || { items: [] };
+const apps = project?.apps || [];
+const visibleApps = apps.filter((app) => !app.hidden);
+const appIds = visibleApps.map((app) => app.id);
+
+/** 依赖 apps.json 的用例先调这个：数据坏了要红得明明白白，而不是空转通过 */
+function requireData() {
+  assert.ok(!projectError, `data/*.json 加载失败，本用例无法执行：${projectError && projectError.message}`);
+  assert.ok(visibleApps.length > 0, 'data/apps.json 里没有任何可见软件，本用例无法执行');
+}
+
+/** 按 apps.json 组装页面要的 window.SITE_DATA（与 build.mjs 产出的结构一致） */
+function siteDataFromJson() {
+  requireData();
+  return { generatedAt: '', site, categories, apps: visibleApps };
+}
+
+/**
+ * 给页面喂数据：数据来源必须是 apps.json，不能是构建产物 data/apps.generated.js。
+ * 以前喂的是生成物 —— 生成物陈旧时用例照样绿，等于什么都没测。
+ */
+function injectSiteData(dom) {
+  const json = JSON.stringify(siteDataFromJson()).replace(/</g, '\\u003c');
+  new Function('window', `window.SITE_DATA = ${json};`)(dom.window);
+}
+
+/**
+ * 比较两段长文本。
+ * assert.equal 撞上两个 50KB 的产物会吐出 4 万字符的逐行 diff，把终端刷没；
+ * 这里只报「首个差异的位置 + 前后各 80 字符」，全文留给 VERBOSE=1。
+ */
+function assertSameText(actual, expected, label, hint) {
+  const a = String(actual);
+  const b = String(expected);
+  if (a === b) return;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i += 1;
+  const line = a.slice(0, i).split('\n').length;
+  const from = Math.max(0, i - 80);
+  const detail = [
+    `${label} 不一致（第 ${line} 行、第 ${i} 个字符起）`,
+    `  磁盘：${JSON.stringify(a.slice(from, i + 80))}`,
+    `  生成：${JSON.stringify(b.slice(from, i + 80))}`,
+    `  长度：磁盘 ${a.length} 字符 / 生成 ${b.length} 字符${hint ? `　${hint}` : ''}`,
+  ].join('\n');
+  if (process.env.VERBOSE === '1') {
+    console.log(`\n---- 磁盘全文（${a.length} 字符）----\n${a}\n---- 生成全文（${b.length} 字符）----\n${b}\n`);
+  }
+  assert.fail(detail);
+}
+
+/** 跑一个 node 脚本，拿回 { code, stdout, stderr } */
+function runNode(scriptPath, cwd) {
+  return new Promise((done) => {
+    const child = spawn(process.execPath, [scriptPath], { cwd, windowsHide: true });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.on('close', (code) => done({ code, stdout, stderr }));
+    child.on('error', (error) => done({ code: -1, stdout, stderr: `${stderr}${error.message}` }));
+  });
+}
+
+const pathExists = (target) => stat(target).then(() => true, () => false);
+
+/** dist 不存在就先构建一次：绝对不能让「没构建」被当成「检查通过」 */
+async function ensureDist() {
+  if (await pathExists(join(ROOT, 'dist', 'index.html'))) return;
+  const result = await runNode(join(ROOT, 'scripts', 'build.mjs'), ROOT);
+  assert.equal(result.code, 0, `dist 不存在，尝试构建也失败了：${result.stderr || result.stdout}`);
+  assert.ok(await pathExists(join(ROOT, 'dist', 'index.html')), '构建声称成功，但 dist/index.html 还是没有');
 }
 
 const demoApp = {
@@ -279,7 +380,12 @@ console.log('\n无 JS / file:// 场景回归检查：');
 
 const cssText = await readFile(new URL('../assets/css/style.css', import.meta.url), 'utf8');
 const indexText = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-const detailText = await readFile(new URL('../apps/7zip/index.html', import.meta.url), 'utf8').catch(() => '');
+// 详情页取 apps.json 里的第一条，而不是写死某个软件 —— 软件被下线后这里不该跟着烂
+const primaryApp = visibleApps[0] || null;
+const primaryId = primaryApp ? primaryApp.id : '';
+const detailText = primaryId
+  ? await readFile(join(ROOT, 'apps', primaryId, 'index.html'), 'utf8').catch(() => '')
+  : '';
 
 await test('样式表里 .reveal 默认必须是可见的（否则预渲染的卡片会一片空白）', () => {
   const block = cssText.match(/^\.reveal \{([^}]*)\}/m);
@@ -314,9 +420,13 @@ await test('首页加载的是打包后的普通脚本（直接双击打开也�
 });
 
 await test('详情页有预渲染内容 + 主题初始化 + 相对路径正确', () => {
-  assert.ok(detailText, 'apps/7zip/index.html 不存在，请先运行 npm run build');
+  requireData();
+  assert.ok(detailText, `apps/${primaryId}/index.html 不存在，请先运行 npm run build`);
   assert.match(detailText, /data-prerendered="true"/);
-  assert.match(detailText, /<h1>7-Zip<\/h1>/);
+  assert.ok(
+    detailText.includes(`<h1>${escapeHtml(primaryApp.name)}</h1>`),
+    `apps/${primaryId}/index.html 的标题应该是「${primaryApp.name}」（读不到 name 字段？）`
+  );
   assert.match(detailText, /href="\.\.\/\.\.\/assets\/css\/style\.css"/);
   assert.match(detailText, /data-theme/);
   assert.match(detailText, /<script defer src="\.\.\/\.\.\/js\/app\.js">/, '详情页应引用打包后的 js/app.js');
@@ -369,9 +479,9 @@ await test('js/home.js、js/app.js、js/admin-lib.js 都是最新的（提交前
   const home = await readSource('js/home.js').catch(() => '');
   const app = await readSource('js/app.js').catch(() => '');
   const adminLib = await readSource('js/admin-lib.js').catch(() => '');
-  assert.equal(home, homeBundle, 'js/home.js 与源码不一致，请运行 npm run build');
-  assert.equal(app, appBundle, 'js/app.js 与源码不一致，请运行 npm run build');
-  assert.equal(adminLib, adminLibBundle, 'js/admin-lib.js 与源码不一致，请运行 npm run build');
+  assertSameText(home, homeBundle, 'js/home.js', '与源码不一致，请运行 npm run build');
+  assertSameText(app, appBundle, 'js/app.js', '与源码不一致，请运行 npm run build');
+  assertSameText(adminLib, adminLibBundle, 'js/admin-lib.js', '与源码不一致，请运行 npm run build');
 });
 
 await test('首页脚本能在无浏览器环境下跑通并渲染出卡片', async () => {
@@ -396,14 +506,21 @@ await test('首页脚本能在无浏览器环境下跑通并渲染出卡片', as
       '[data-view-btn]': viewButtons,
     },
   });
-  // 用构建生成的数据文件喂给页面（顺便验证它是合法 JS）
-  new Function('window', await readSource('data/apps.generated.js'))(dom.window);
+  // 数据直接来自 apps.json（不是陈旧的 data/apps.generated.js），
+  // 这样 apps.json 烂掉时这个用例必须跟着红
+  injectSiteData(dom);
   await runScript(homeBundle, dom);
 
   const cards = (grid.innerHTML.match(/class="app-card/g) || []).length;
-  assert.equal(cards, dom.window.SITE_DATA.apps.length, `卡片数量不对（${cards}）`);
-  assert.match(grid.innerHTML, /data-id="7zip"/, '没渲染出 7-Zip 卡片');
-  assert.match(grid.innerHTML, /href="[^"]*apps\/7zip\/index\.html"/, '卡片链接不对');
+  assert.equal(cards, visibleApps.length, `卡片数量不对（${cards}，应为 ${visibleApps.length}）`);
+  assert.ok(
+    grid.innerHTML.includes(`data-id="${primaryId}"`),
+    `没渲染出 ${primaryId} 的卡片`
+  );
+  assert.ok(
+    new RegExp(`href="[^"]*apps/${primaryId}/index\\.html"`).test(grid.innerHTML),
+    '卡片链接不对'
+  );
   assert.match(chips.innerHTML, /data-category="all"/, '分类按钮没渲染');
   assert.match(chips.innerHTML, /data-category="windows"/, '分类按钮没渲染');
   assert.match(resultBar.innerHTML, /个结果/, '统计信息没渲染');
@@ -419,24 +536,38 @@ await test('直接双击打开（file://）时，卡片与下载链接都能正�
     protocol: 'file:',
     elements: { '[data-app-grid]': grid },
   });
-  new Function('window', await readSource('data/apps.generated.js'))(dom.window);
+  injectSiteData(dom);
   await runScript(homeBundle, dom);
 
-  const link = /href="([^"]*apps\/7zip\/index\.html)"/.exec(grid.innerHTML);
+  const link = new RegExp(`href="([^"]*apps/${primaryId}/index\\.html)"`).exec(grid.innerHTML);
   assert.ok(link, '没有渲染出卡片链接');
   assert.equal(
     new URL(link[1], dom.location.href).href,
-    'file:///C:/resource-site/apps/7zip/index.html',
+    `file:///C:/resource-site/apps/${primaryId}/index.html`,
     'file:// 下卡片链接解析不对'
   );
 
-  // 详情页里的站内下载链接同样是相对路径，在 file:// 下也能下载
-  // （notepad-plus-plus 里有一个指向 downloads/ 的站内文件）
-  const detail = await readFile(join(ROOT, 'apps', 'notepad-plus-plus', 'index.html'), 'utf8');
-  const download = /href="([^"]*downloads\/[^"]+)"/.exec(detail);
-  assert.ok(download, '详情页里没有站内下载链接');
+  // 站内下载链接（downloads/…）在详情页里也是相对路径，file:// 下必须能落到本地文件。
+  // 现有数据里全是外链，所以拿第一条真实软件 + 一个 downloads/ 目录项现场渲染一遍，
+  // 而不是去读某个已经下线软件的旧快照。
+  const withLocalDownload = {
+    ...primaryApp,
+    downloads: [
+      { name: '站内安装包', url: `downloads/${primaryId}-test.exe`, size: '1 MB', platform: 'Windows', arch: 'x64', type: 'installer' },
+      ...(primaryApp.downloads || []),
+    ],
+  };
+  const rendered = detailContentHtml(withLocalDownload, {
+    root: '../../',
+    site,
+    categories,
+    apps: visibleApps,
+    platform: 'Windows',
+  });
+  const download = /href="([^"]*downloads\/[^"]+)"/.exec(rendered);
+  assert.ok(download, '详情页里没渲染出站内下载链接');
   assert.match(
-    new URL(download[1], 'file:///C:/resource-site/apps/notepad-plus-plus/index.html').href,
+    new URL(download[1], `file:///C:/resource-site/apps/${primaryId}/index.html`).href,
     /^file:\/\/\/C:\/resource-site\/downloads\//,
     `file:// 下下载链接解析不对：${download[1]}`
   );
@@ -474,14 +605,23 @@ await test('端到端：按 index.html 里的顺序加载脚本，搜索能真�
   }
 
   const cards = () => (grid.innerHTML.match(/class="app-card/g) || []).length;
-  assert.equal(cards(), 6, '首屏应该把全部软件都渲染出来');
+  assert.equal(cards(), visibleApps.length, `首屏应该把全部软件都渲染出来（应为 ${visibleApps.length} 个）`);
 
-  // 搜索：输入 ocr 应该只剩 Umi-OCR（输入框有 140ms 防抖，所以等一会儿）
-  search.value = 'ocr';
+  // 搜索：用一个能命中、但命中不了全部的「常规词」。期望值从 apps.json 现算，
+  // 不写死「等于 1」—— 那样加一个软件就得改测试，改的时候很容易顺手放宽断言。
+  const needle = 'ocr';
+  const hits = visibleApps.filter((app) => matchQuery(app, needle));
+  assert.ok(
+    hits.length > 0 && hits.length < visibleApps.length,
+    `搜索词「${needle}」应该只命中一部分（实际 ${hits.length}/${visibleApps.length}），否则证明不了筛选真的生效`
+  );
+  search.value = needle;
   search.dispatchEvent('input');
   await sleep(280);
-  assert.equal(cards(), 1, `搜索 ocr 应该只剩 1 个结果，实际 ${cards()} 个`);
-  assert.match(grid.innerHTML, /data-id="umi-ocr"/);
+  assert.equal(cards(), hits.length, `搜索 ${needle} 应该剩 ${hits.length} 个结果，实际 ${cards()} 个`);
+  hits.forEach((app) => {
+    assert.ok(grid.innerHTML.includes(`data-id="${app.id}"`), `搜索结果里应该有 ${app.id}`);
+  });
 
   // 搜不到时显示空状态，而不是留一片空白让人以为坏了
   search.value = 'zzz-不存在的软件';
@@ -494,7 +634,7 @@ await test('端到端：按 index.html 里的顺序加载脚本，搜索能真�
   search.value = '';
   search.dispatchEvent('input');
   await sleep(280);
-  assert.equal(cards(), 6, '清空搜索后应该恢复全部软件');
+  assert.equal(cards(), visibleApps.length, '清空搜索后应该恢复全部软件');
 });
 
 await test('file:// 下不会因为改地址栏而崩（history.replaceState 有异常保护）', async () => {
@@ -505,31 +645,37 @@ await test('file:// 下不会因为改地址栏而崩（history.replaceState 有
 await test('详情页脚本能跑通：预渲染页面 + ?id= 兜底渲染', async () => {
   // 情况一：构建好的静态详情页（内容已预渲染）
   const prerendered = makeElement('main');
-  prerendered.dataset.appId = '7zip';
+  prerendered.dataset.appId = primaryId;
   prerendered.dataset.prerendered = 'true';
-  const dom1 = createDom({ pathname: '/apps/7zip/index.html', elements: { '[data-app-root]': prerendered } });
-  new Function('window', await readSource('data/apps.generated.js'))(dom1.window);
+  const dom1 = createDom({ pathname: `/apps/${primaryId}/index.html`, elements: { '[data-app-root]': prerendered } });
+  injectSiteData(dom1);
   await runScript(appBundle, dom1);
   assert.ok(dom1.documentElement.classList.contains('js'));
   assert.equal(dom1.document.body.dataset.ready, 'true', '详情页脚本没有跑完');
 
-  // 情况二：通用兜底页 apps/app.html?id=localsend（需要现场渲染）
+  // 情况二：通用兜底页 apps/app.html?id=<真实软件>（需要现场渲染）
   const dynamic = makeElement('main');
   dynamic.dataset.appId = '';
   dynamic.dataset.prerendered = 'false';
   const dom2 = createDom({
     pathname: '/apps/app.html',
-    search: '?id=localsend',
+    search: `?id=${primaryId}`,
     elements: { '[data-app-root]': dynamic },
   });
-  new Function('window', await readSource('data/apps.generated.js'))(dom2.window);
+  injectSiteData(dom2);
   await runScript(appBundle, dom2);
-  assert.match(dynamic.innerHTML, /LocalSend/, '兜底页没有渲染出对应软件');
+  assert.ok(
+    dynamic.innerHTML.includes(escapeHtml(primaryApp.name)),
+    `兜底页没有渲染出 ${primaryApp.name}`
+  );
   assert.match(dynamic.innerHTML, /id="downloads"/, '兜底页没有下载区');
 });
 
 await test('端到端：详情页也按 HTML 里写的顺序加载脚本，file:// 下能跑通', async () => {
-  for (const id of ['7zip', 'notepad-plus-plus']) {
+  requireData();
+  // 遍历 apps.json 里所有可见软件，而不是写死两个（写死的那个软件已经下线了）
+  assert.ok(appIds.length > 0, '至少要有一个可见软件');
+  for (const id of appIds) {
     const html = await readFile(join(ROOT, 'apps', id, 'index.html'), 'utf8');
     assert.ok(!/type="module"/.test(html), `apps/${id} 不应引用 ES 模块`);
     const scripts = [...html.matchAll(/<script([^>]*?)\ssrc="([^"]+)"/g)].map((m) => ({ src: m[2] }));
@@ -551,15 +697,17 @@ await test('端到端：详情页也按 HTML 里写的顺序加载脚本，file:
   }
 });
 
-const { site, categories, apps } = await loadProject(ROOT);
-
 await test('data/*.json 能正常解析', () => {
+  // 这条用例就是那个「数据闸门」：数据坏了要在这里红，
+  // 而不是在模块顶层抛异常把后面几十个用例一起打掉。
+  requireData();
   assert.ok(site && typeof site === 'object');
   assert.ok(Array.isArray(categories.items));
   assert.ok(Array.isArray(apps) && apps.length > 0, 'apps.json 里至少要有一个软件');
 });
 
 await test('每个软件都有 id / name / downloads 字段', () => {
+  requireData();
   apps.forEach((app) => {
     assert.ok(app.id, `${app.name || '?'} 缺少 id`);
     assert.ok(app.name, `${app.id} 缺少 name`);
@@ -568,11 +716,13 @@ await test('每个软件都有 id / name / downloads 字段', () => {
 });
 
 await test('id 不重复', () => {
+  requireData();
   const ids = apps.map((app) => app.id);
   assert.equal(new Set(ids).size, ids.length, '存在重复的 id');
 });
 
 await test('每个下载地址都是 http(s) 或站内路径', () => {
+  requireData();
   apps.forEach((app) => {
     (app.downloads || []).forEach((item) => {
       assert.ok(
@@ -584,6 +734,7 @@ await test('每个下载地址都是 http(s) 或站内路径', () => {
 });
 
 await test('数据校验没有致命错误', async () => {
+  requireData();
   const { errors } = await validateProject(ROOT, { site, apps });
   assert.equal(errors.length, 0, errors.join(' / '));
 });
@@ -984,11 +1135,11 @@ await test('在线后台：浏览器里的 JSON 改写逻辑和本地后台逐�
   );
 });
 
-const pathExists = (target) => stat(target).then(() => true, () => false);
-
 await test('构建产物：密码和缓存不会进 dist，在线后台页面会进 dist', async () => {
   const dist = join(ROOT, 'dist');
-  if (!(await pathExists(join(dist, 'index.html')))) return; // 还没构建过就先跳过
+  // 以前是「dist 不存在就 return」—— 没构建过的仓库上这条会记成 ✓，
+  // 等于什么都没检查。现在前置强制构建，构建不出来就是失败。
+  await ensureDist();
   assert.equal(await pathExists(join(dist, 'data', 'admin.json')), false, 'dist 里绝不能有后台密码');
   assert.equal(await pathExists(join(dist, '.wrangler')), false, 'dist 里不该有 wrangler 缓存');
   assert.equal(await pathExists(join(dist, 'scripts')), false, 'dist 里不该有构建脚本');
@@ -1202,7 +1353,9 @@ await test('在线后台：连上之后发布软件，安装包进 Releases、ap
   await settle();
   assert.equal(connectPanel.hidden, true, '连接成功后应该收起连接表单');
   assert.equal(dom.document.body.dataset.ready, 'true');
-  assert.equal(dom.document.querySelector('[data-count-apps]').textContent, '6');
+  // 数量按 apps.json 现算：写死 6 的后果是「删掉一个软件就有一条无关用例变红」
+  const existingCount = JSON.parse(appsJson).apps.length;
+  assert.equal(dom.document.querySelector('[data-count-apps]').textContent, String(existingCount));
 
   // 选安装包 → 保存并提交
   const fileInput = dom.document.querySelector('[data-file]');
@@ -1234,9 +1387,13 @@ await test('在线后台：连上之后发布软件，安装包进 Releases、ap
   assert.equal(added.downloads[0].platform, 'Windows');
   assert.equal(added.downloads[0].arch, 'x64');
   assert.equal(added.version, '1.0.0');
-  // 原有软件不能被弄丢或重排
-  assert.equal(committed.apps.length, 7);
-  assert.ok(committed.apps.slice(0, 6).every((app, index) => app.id === JSON.parse(appsJson).apps[index].id));
+  // 原有软件不能被弄丢或重排（数量按源文件现算，不写死 7 这种历史事实）
+  const originalApps = JSON.parse(appsJson).apps;
+  assert.equal(committed.apps.length, originalApps.length + 1, '提交后应该只多出 1 个软件');
+  assert.ok(
+    committed.apps.slice(0, originalApps.length).every((app, index) => app.id === originalApps[index].id),
+    '原有软件的顺序不该被改动'
+  );
 });
 
 /* ---------------- 汇总 ---------------- */
