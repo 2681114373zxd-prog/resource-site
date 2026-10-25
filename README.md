@@ -172,6 +172,21 @@ git push -u origin main
 > `git config --global --unset http.https://github.com/.proxy`。
 > 第一次 `push` 会弹出登录窗口，用浏览器授权登录你的 GitHub 账号，之后 Windows 会记住凭据。
 
+### 以后更新：双击 `一键提交到GitHub.cmd`
+
+改完数据或页面后，直接双击项目根目录的 **`一键提交到GitHub.cmd`**。它会自动：
+
+1. 检查 `data/` 里的数据；
+2. 重新构建站点；
+3. 跑一遍自检（91 项）；
+4. 把改动提交到 `main`；
+5. 拉取 GitHub 上的最新提交，再推送。
+
+任何一步失败都会停下来，不会把坏数据推上去。推送成功后 GitHub Actions 会自动部署，通常 1～2 分钟线上生效。
+
+> 这个脚本只处理 `main` 分支。如果你在别的分支，先执行 `git switch main` 再双击。
+> 首次运行如果弹出 GitHub 登录窗口，按提示登录一次即可，之后 Windows 会记住凭据。
+
 ### 第 2 步：改 `data/site.json` 里的网址
 
 把 `url` 改成你的真实地址，例如 `https://你的用户名.github.io/你的仓库名`。

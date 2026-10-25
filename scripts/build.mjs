@@ -70,6 +70,7 @@ const DEV_ONLY_ENTRIES = new Set([
   'Xixi后台.cmd',
   '发布软件.cmd',
   '启动预览.cmd',
+  '一键提交到GitHub.cmd',
   // 系统 / 临时文件
   '.DS_Store',
   'Thumbs.db',
