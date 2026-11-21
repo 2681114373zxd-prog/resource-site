@@ -2,38 +2,38 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Xixi · 更新日志</title>
-    <link>https://2681114373.ccwu.cc/</link>
+    <link>https://xdzhu-apps.cloudzyro.app/</link>
     <description>Xixi 是一个个人软件与资源下载站，收集我自己制作、整理、汉化或常用的软件安装包，提供版本、更新时间、文件大小、更新日志与多平台下载。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Thu, 03 Sep 2026 00:00:00 GMT</lastBuildDate>
-    <atom:link href="https://2681114373.ccwu.cc/feed.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Fri, 20 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://xdzhu-apps.cloudzyro.app/feed.xml" rel="self" type="application/rss+xml"/>
     <item>
-      <title>7-Zip v26.03</title>
-      <link>https://2681114373.ccwu.cc/apps/7zip/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/7zip/</guid>
-      <pubDate>Thu, 03 Sep 2026 00:00:00 GMT</pubDate>
-      <description>免费开源的高压缩率压缩 / 解压工具 / 更新至7-Zip26.03英寸 / 提供最新Windows x64/ARM64/x86版本 / 更新Linux命令行版本</description>
+      <title>OBS Studio v33.0.2</title>
+      <link>https://xdzhu-apps.cloudzyro.app/apps/obs-studio/</link>
+      <guid isPermaLink="true">https://xdzhu-apps.cloudzyro.app/apps/obs-studio/</guid>
+      <pubDate>Fri, 20 Nov 2026 00:00:00 GMT</pubDate>
+      <description>开源免费的录屏与直播推流软件 / 更新至 OBS Studio 33.0.2（GitHub 官方发布） / Windows / macOS / Ubuntu 安装包全部直链 / 旧的 32.2.2 下载地址已失效，全部换到官方 Releases</description>
     </item>
     <item>
-      <title>OBS Studio v32.2.2</title>
-      <link>https://2681114373.ccwu.cc/apps/obs-studio/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/obs-studio/</guid>
-      <pubDate>Fri, 14 Aug 2026 00:00:00 GMT</pubDate>
-      <description>开源免费的录屏与直播推流软件 / 更新至OBS Studio32.2.2 / 继续支持Windows/macOS/Linux / 使用官方 OBS 下载渠道</description>
+      <title>7-Zip v26.06</title>
+      <link>https://xdzhu-apps.cloudzyro.app/apps/7zip/</link>
+      <guid isPermaLink="true">https://xdzhu-apps.cloudzyro.app/apps/7zip/</guid>
+      <pubDate>Sat, 07 Nov 2026 00:00:00 GMT</pubDate>
+      <description>免费开源的高压缩率压缩 / 解压工具 / 更新至 7-Zip 26.06（GitHub 官方发布） / Windows x64 / ARM64 / x86 安装包与 MSI / Linux x64 / ARM64 命令行版直链</description>
     </item>
     <item>
       <title>Termux v0.118.3</title>
-      <link>https://2681114373.ccwu.cc/apps/termux/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/termux/</guid>
-      <pubDate>Thu, 01 Jan 2026 00:00:00 GMT</pubDate>
-      <description>Android上的Linux终端模拟器 / 更新至Termux0.118.3 / 继续支持Android7.0及以上 / 提供GitHub和F-Droid官方下载渠道</description>
+      <link>https://xdzhu-apps.cloudzyro.app/apps/termux/</link>
+      <guid isPermaLink="true">https://xdzhu-apps.cloudzyro.app/apps/termux/</guid>
+      <pubDate>Thu, 22 May 2025 00:00:00 GMT</pubDate>
+      <description>Android上的Linux终端模拟器 / Termux 0.118.3（GitHub 官方发布） / 通用版 / arm64-v8a / armeabi-v7a / x86_64 四种 APK 直链 / 支持 Android 7.0 及以上</description>
     </item>
     <item>
       <title>Umi-OCR v2.1.5</title>
-      <link>https://2681114373.ccwu.cc/apps/umi-ocr/</link>
-      <guid isPermaLink="true">https://2681114373.ccwu.cc/apps/umi-ocr/</guid>
-      <pubDate>Thu, 29 May 2025 00:00:00 GMT</pubDate>
-      <description>免费开源的离线批量 OCR 文字识别工具 / 更新 Umi-OCR 至 2.1.5 / 继续支持 Windows 7 x64 及以上 / 提供多种官方下载渠道</description>
+      <link>https://xdzhu-apps.cloudzyro.app/apps/umi-ocr/</link>
+      <guid isPermaLink="true">https://xdzhu-apps.cloudzyro.app/apps/umi-ocr/</guid>
+      <pubDate>Tue, 25 Mar 2025 00:00:00 GMT</pubDate>
+      <description>免费开源的离线批量 OCR 文字识别工具 / Umi-OCR 2.1.5（GitHub 官方发布） / Windows Rapid / Paddle 与 Linux Paddle 直链 / 离线批量 OCR，无需联网</description>
     </item>
   </channel>
 </rss>

@@ -226,6 +226,16 @@ window.SITE_DATA = ${jsonForScript(bundle)};
     SITE_TAGLINE: site.tagline || '',
     SITE_AUTHOR: site.author || '',
     SITE_GITHUB: site.github || '#',
+    // 站点主的 GitHub 主页：从仓库地址里取第 1 段路径（owner）。
+    // 没填邮箱时页脚用它替代「联系邮箱」，避免出现 href="#" 的死链。
+    SITE_PROFILE: (() => {
+      try {
+        const owner = new URL(site.github).pathname.split('/').filter(Boolean)[0];
+        return owner ? `https://github.com/${owner}` : site.github || '#';
+      } catch {
+        return '#';
+      }
+    })(),
     SITE_EMAIL_HREF: site.email ? `mailto:${site.email}` : '#',
     SITE_NOTE: site.footerNote || '',
     OG_IMAGE: ogImage,

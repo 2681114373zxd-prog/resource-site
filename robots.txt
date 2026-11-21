@@ -7,4 +7,4 @@ Allow: /
 # 后台页面不收录：它只是个连 GitHub API 的界面，没有令牌什么也做不了
 Disallow: /admin/
 
-Sitemap: https://2681114373.ccwu.cc/sitemap.xml
+Sitemap: https://xdzhu-apps.cloudzyro.app/sitemap.xml

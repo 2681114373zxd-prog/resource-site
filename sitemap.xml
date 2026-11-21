@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://2681114373.ccwu.cc/</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://xdzhu-apps.cloudzyro.app/</loc>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://2681114373.ccwu.cc/apps/7zip/</loc>
-    <lastmod>2026-09-03</lastmod>
+    <loc>https://xdzhu-apps.cloudzyro.app/apps/7zip/</loc>
+    <lastmod>2026-11-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://2681114373.ccwu.cc/apps/umi-ocr/</loc>
-    <lastmod>2025-05-29</lastmod>
+    <loc>https://xdzhu-apps.cloudzyro.app/apps/umi-ocr/</loc>
+    <lastmod>2025-03-25</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://2681114373.ccwu.cc/apps/obs-studio/</loc>
-    <lastmod>2026-08-14</lastmod>
+    <loc>https://xdzhu-apps.cloudzyro.app/apps/obs-studio/</loc>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://2681114373.ccwu.cc/apps/termux/</loc>
-    <lastmod>2026-01-01</lastmod>
+    <loc>https://xdzhu-apps.cloudzyro.app/apps/termux/</loc>
+    <lastmod>2025-05-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
