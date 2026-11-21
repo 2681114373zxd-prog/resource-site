@@ -507,10 +507,24 @@ function cardHtml(app, ctx = {}) {
 /* --------------------------------------------------------------------------
    详情页：下载区
    -------------------------------------------------------------------------- */
+
+// 国内直连 GitHub Releases 经常只有几十 KB/s。这里给每个 GitHub 资产链接再挂一个
+// 「加速」入口：前缀式反代，路径与官方完全一致，文件字节不变。
+// 想换节点只改这一行；置空字符串即可整体关闭。
+const GH_PROXY = 'https://gh-proxy.com/';
+
+function accelUrl(url, ctx = {}) {
+  if (!/^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//i.test(url)) return '';
+  const base = String(ctx.ghProxy ?? GH_PROXY).trim();
+  if (!base) return '';
+  return base.replace(/\/+$/, '') + '/' + url;
+}
+
 function downloadRowHtml(item, ctx = {}) {
   const { root = '../../' } = ctx;
   const url = resolveDownloadUrl(item.url, root);
   const external = /^https?:/i.test(url);
+  const accel = accelUrl(url, ctx);
   const bits = [item.arch, item.type, item.size].filter(Boolean).join(' · ');
   return `<div class="dl-row" data-platform="${escapeHtml(item.platform || '')}" data-arch="${escapeHtml(
     item.arch || ''
@@ -524,6 +538,11 @@ function downloadRowHtml(item, ctx = {}) {
   </div>
   <div class="dl-side">
     ${item.sha256 ? `<span class="dl-size" title="SHA256">SHA256 已提供</span>` : ''}
+    ${
+      accel
+        ? `<a class="dl-accel" href="${safeUrl(accel)}" target="_blank" rel="noopener noreferrer" title="国内加速节点（第三方反代，指向同一个官方文件）" style="font-size:0.78rem;color:inherit;opacity:0.65;text-decoration:underline;white-space:nowrap">加速</a>`
+        : ''
+    }
     <a class="btn btn-primary" href="${safeUrl(url)}"${
       external ? ' target="_blank" rel="noopener noreferrer"' : ' download'
     }>${icon('download')} 下载${item.size && item.size !== '-' ? ` · ${escapeHtml(item.size)}` : ''}</a>
@@ -727,6 +746,10 @@ function detailContentHtml(app, ctx = {}) {
       <section class="detail-card" id="downloads">
         <h2>${icon('download')} 下载（v${escapeHtml(app.version || '—')}）</h2>
         <p class="muted" style="font-size:0.85rem;margin-top:-6px">下载前请确认系统与架构（x64 / ARM64 / 32 位）。如果某个链接无法访问，可以在软件主页找到官方地址。</p>
+        <p class="muted" style="font-size:0.8rem;margin:0 0 12px">
+          国内直连 GitHub 常见只有几十 KB/s：点右侧<strong>「加速」</strong>走国内反代，
+          或用下载器多线程拉原链（<code style="font-size:0.75rem">aria2c -x16 -s16 链接</code>）。
+        </p>
         ${downloadsHtml(app, ctx)}
         <p class="muted" style="font-size:0.8rem;margin:14px 0 0">${
           site.footerNote ? escapeHtml(site.footerNote) : '文件版权归原作者所有。'
